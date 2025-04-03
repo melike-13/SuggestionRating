@@ -74,8 +74,9 @@ function LoginPage() {
       });
       
       if (response.ok) {
-        queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
-        setLocation("/");
+        // Oturum açma başarılı, sayfayı yenileyelim (zorla yeniden yükleme)
+        await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+        window.location.href = "/"; // Sayfayı tamamen yeniden yükle
       } else {
         const data = await response.json();
         setError(data.message || "Login failed");
