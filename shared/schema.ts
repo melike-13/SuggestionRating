@@ -1,0 +1,116 @@
+import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
+import { createInsertSchema } from "drizzle-zod";
+import { z } from "zod";
+
+// Users table for authentication and tracking who submitted suggestions
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  username: text("username").notNull().unique(),
+  password: text("password").notNull(),
+  displayName: text("display_name").notNull(),
+  isAdmin: boolean("is_admin").notNull().default(false),
+});
+
+export const insertUserSchema = createInsertSchema(users).pick({
+  username: true,
+  password: true,
+  displayName: true,
+  isAdmin: true,
+});
+
+// Kaizen suggestions table
+export const suggestions = pgTable("suggestions", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  category: text("category").notNull(),
+  benefits: text("benefits").notNull(),
+  status: text("status").notNull().default("new"),
+  submittedBy: integer("submitted_by").notNull(),
+  submittedAt: timestamp("submitted_at").notNull().defaultNow(),
+  rating: integer("rating"),
+  feedback: text("feedback"),
+  reviewedBy: integer("reviewed_by"),
+  reviewedAt: timestamp("reviewed_at"),
+});
+
+export const insertSuggestionSchema = createInsertSchema(suggestions).omit({
+  id: true,
+  status: true,
+  submittedAt: true,
+  rating: true,
+  feedback: true,
+  reviewedBy: true,
+  reviewedAt: true,
+});
+
+// Rewards table
+export const rewards = pgTable("rewards", {
+  id: serial("id").primaryKey(),
+  suggestionId: integer("suggestion_id").notNull(),
+  amount: integer("amount").notNull(),
+  type: text("type").notNull(), // "money", "points", "gift"
+  assignedBy: integer("assigned_by").notNull(),
+  assignedAt: timestamp("assigned_at").notNull().defaultNow(),
+});
+
+export const insertRewardSchema = createInsertSchema(rewards).omit({
+  id: true,
+  assignedAt: true,
+});
+
+// Types
+export type User = typeof users.$inferSelect;
+export type InsertUser = z.infer<typeof insertUserSchema>;
+
+export type Suggestion = typeof suggestions.$inferSelect;
+export type InsertSuggestion = z.infer<typeof insertSuggestionSchema>;
+
+export type Reward = typeof rewards.$inferSelect;
+export type InsertReward = z.infer<typeof insertRewardSchema>;
+
+// Status and Category Constants
+export const SUGGESTION_STATUSES = {
+  NEW: "new",
+  REVIEW: "review",
+  APPROVED: "approved",
+  IMPLEMENTED: "implemented",
+  REJECTED: "rejected",
+} as const;
+
+export const SUGGESTION_CATEGORIES = {
+  PRODUCTION: "production",
+  QUALITY: "quality",
+  SAFETY: "safety", 
+  ENVIRONMENT: "environment",
+  COST: "cost",
+  WORKPLACE: "workplace",
+  OTHER: "other",
+} as const;
+
+export const REWARD_TYPES = {
+  MONEY: "money",
+  POINTS: "points",
+  GIFT: "gift",
+} as const;
+
+// Extend with validation
+export const extendedInsertSuggestionSchema = insertSuggestionSchema.extend({
+  title: z.string().min(5, "Başlık en az 5 karakter olmalıdır").max(100, "Başlık en fazla 100 karakter olmalıdır"),
+  description: z.string().min(10, "Açıklama en az 10 karakter olmalıdır"),
+  benefits: z.string().min(10, "Beklenen faydalar en az 10 karakter olmalıdır"),
+  category: z.enum([
+    SUGGESTION_CATEGORIES.PRODUCTION,
+    SUGGESTION_CATEGORIES.QUALITY,
+    SUGGESTION_CATEGORIES.SAFETY,
+    SUGGESTION_CATEGORIES.ENVIRONMENT,
+    SUGGESTION_CATEGORIES.COST,
+    SUGGESTION_CATEGORIES.WORKPLACE,
+    SUGGESTION_CATEGORIES.OTHER
+  ]),
+});
+
+export const extendedInsertRewardSchema = insertRewardSchema.extend({
+  amount: z.number().positive("Ödül miktarı pozitif olmalıdır"),
+  type: z.enum([REWARD_TYPES.MONEY, REWARD_TYPES.POINTS, REWARD_TYPES.GIFT]),
+});
