@@ -42,7 +42,15 @@ function App() {
           <Route path="/" component={Dashboard} />
           <Route path="/suggestions" component={SuggestionsList} />
           <Route path="/create" component={CreateSuggestion} />
-          <Route path="/admin" component={AdminPanel} />
+          <Route path="/admin" component={() => {
+            if (user?.isAdmin) {
+              return <AdminPanel />;
+            } else {
+              // Admin olmayan kullanıcılar için yönlendirme
+              setTimeout(() => setLocation("/"), 0);
+              return <div>Yetkisiz erişim, ana sayfaya yönlendiriliyorsunuz...</div>;
+            }
+          }} />
           <Route component={NotFound} />
         </Switch>
       </main>
