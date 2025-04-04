@@ -150,7 +150,7 @@ export class DatabaseStorage implements IStorage {
     if (processedUpdates.currentStateFiles === null) processedUpdates.currentStateFiles = [];
     if (processedUpdates.improvementFiles === null) processedUpdates.improvementFiles = [];
     
-    // Tarih alanlarını kontrol et ve gerekirse düzelt
+    // Alan türlerini kontrol et ve gerekirse düzelt
     Object.keys(processedUpdates).forEach(key => {
       const value = (processedUpdates as any)[key];
       
@@ -165,6 +165,28 @@ export class DatabaseStorage implements IStorage {
         } catch (e) {
           // Geçersiz tarih formatı ise değeri olduğu gibi bırak
           console.warn(`Invalid date format for field ${key}: ${value}`);
+        }
+      }
+
+      // Puan alanlarını sayısal değerlere dönüştür
+      if ((
+          key.includes('Score') || // feasibilityScore, costScore gibi puan alanları
+          key.endsWith('Score')    // puanların sonu genelde Score ile bitiyor
+      )) {
+        if (value !== undefined && value !== null) {
+          try {
+            // Ondalıklı sayılar için parseFloat kullan (string veya number olabilir)
+            const numericValue = typeof value === 'string' ? parseFloat(value) : value;
+            
+            // Çok önemli! Number.isNaN ile geçersiz sayıları kontrol et
+            if (!Number.isNaN(numericValue)) {
+              // Sayı olduğunu kesinleştirmek için Number'a çevir
+              (processedUpdates as any)[key] = Math.floor(numericValue * 10) / 10; // Ondalık kısmı 1 basamakla sınırla
+              console.log(`Score field ${key} converted to number: ${(processedUpdates as any)[key]}`);
+            }
+          } catch (e) {
+            console.error(`Error converting score field ${key} with value ${value}:`, e);
+          }
         }
       }
       
