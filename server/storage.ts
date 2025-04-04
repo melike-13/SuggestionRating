@@ -122,9 +122,28 @@ export class DatabaseStorage implements IStorage {
   }
   
   async updateSuggestion(id: number, updates: Partial<Suggestion>): Promise<Suggestion | undefined> {
+    // Tarih alanlarını otomatik olarak kontrol et ve gerekirse dönüştür
+    const processedUpdates = { ...updates };
+    
+    // Tarih alanlarını kontrol et ve gerekirse düzelt
+    Object.keys(processedUpdates).forEach(key => {
+      const value = (processedUpdates as any)[key];
+      
+      // Eğer bir tarih alanıysa ve string gelmediyse düzelt
+      if (value instanceof Date) {
+        // Veritabanına tarih olarak kaydet, ISO string'e dönüştürme
+        // Drizzle zaten Date nesnelerini otomatik olarak işleyecek
+      }
+      
+      // undefined alanları kaldır
+      if (value === undefined) {
+        delete (processedUpdates as any)[key];
+      }
+    });
+    
     const [updatedSuggestion] = await db
       .update(suggestions)
-      .set(updates)
+      .set(processedUpdates)
       .where(eq(suggestions.id, id))
       .returning();
       

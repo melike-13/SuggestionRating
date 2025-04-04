@@ -410,30 +410,30 @@ export default function SuggestionDetailModal({
             
             {/* Puanlar ve değerlendirmeler */}
             <div className="grid grid-cols-2 gap-4 mt-4 border-t border-gray-200 pt-4">
-              {suggestion.feasibilityScore > 0 && (
+              {suggestion.feasibilityScore && suggestion.feasibilityScore > 0 && (
                 <div>
                   <h5 className="text-sm font-medium text-neutral-700 mb-1">Yapılabilirlik Puanı</h5>
-                  <StarRating value={suggestion.feasibilityScore} readOnly />
+                  <StarRating value={suggestion.feasibilityScore || 0} readOnly />
                   {suggestion.feasibilityFeedback && (
                     <p className="text-sm text-neutral-600 mt-1">{suggestion.feasibilityFeedback}</p>
                   )}
                 </div>
               )}
               
-              {suggestion.costScore > 0 && (
+              {suggestion.costScore && suggestion.costScore > 0 && (
                 <div>
                   <h5 className="text-sm font-medium text-neutral-700 mb-1">Maliyet Puanı</h5>
-                  <StarRating value={suggestion.costScore} readOnly max={5} />
+                  <StarRating value={suggestion.costScore || 0} readOnly max={5} />
                   {suggestion.costDetails && (
                     <p className="text-sm text-neutral-600 mt-1">{suggestion.costDetails}</p>
                   )}
                 </div>
               )}
               
-              {suggestion.evaluationScore > 0 && (
+              {suggestion.evaluationScore && suggestion.evaluationScore > 0 && (
                 <div>
                   <h5 className="text-sm font-medium text-neutral-700 mb-1">Değerlendirme Puanı</h5>
-                  <StarRating value={suggestion.evaluationScore} readOnly max={5} />
+                  <StarRating value={suggestion.evaluationScore || 0} readOnly max={5} />
                   {suggestion.evaluationNotes && (
                     <p className="text-sm text-neutral-600 mt-1">{suggestion.evaluationNotes}</p>
                   )}

@@ -151,10 +151,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const updates: any = { ...req.body };
       
-      // If status is being updated to a review status, set reviewed info
+      // Date objeleri yerine timestamp string kullan veya sil
+      Object.keys(updates).forEach(key => {
+        // Date objesi toISOString hatası veriyorsa, tarih alanlarını string olarak kaydet
+        if (updates[key] && updates[key] instanceof Date) {
+          updates[key] = updates[key].toISOString();
+        }
+        
+        // null değerlerini koru ama undefined'ları sil
+        if (updates[key] === undefined) {
+          delete updates[key];
+        }
+      });
+      
+      // Spesifik alan güncelleme - genel reviewedAt yerine durum bazlı alanlar kullan
       if (updates.status && updates.status !== suggestion.status) {
-        updates.reviewedBy = (req.user as any).id;
-        updates.reviewedAt = new Date();
+        const userId = (req.user as any).id;
+        const now = new Date().toISOString();
+        
+        // Duruma göre ilgili alanları güncelle
+        switch(updates.status) {
+          case SUGGESTION_STATUSES.DEPARTMENT_REVIEW:
+            updates.departmentManagerId = userId;
+            updates.departmentReviewAt = new Date();
+            break;
+          case SUGGESTION_STATUSES.FEASIBILITY_ASSESSMENT:
+            updates.feasibilityReviewedBy = userId;
+            updates.feasibilityReviewedAt = new Date();
+            break;
+          case SUGGESTION_STATUSES.SOLUTION_IDENTIFIED:
+            updates.solutionProposedBy = userId;
+            updates.solutionProposedAt = new Date();
+            break;
+          case SUGGESTION_STATUSES.COST_ASSESSMENT:
+            updates.costReviewedBy = userId;
+            updates.costReviewedAt = new Date();
+            break;
+          case SUGGESTION_STATUSES.EXECUTIVE_REVIEW:
+            updates.executiveReviewedBy = userId;
+            updates.executiveReviewedAt = new Date();
+            break;
+        }
       }
       
       const updatedSuggestion = await storage.updateSuggestion(id, updates);
@@ -198,8 +235,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       if (suggestion && suggestion.status !== SUGGESTION_STATUSES.COMPLETED) {
         await storage.updateSuggestion(suggestion.id, {
           status: SUGGESTION_STATUSES.COMPLETED,
-          reviewedBy: (req.user as any).id,
-          reviewedAt: new Date()
+          // reviewedBy ve reviewedAt kullanmıyoruz artık, durum bazlı tarih alanları var
+          executiveReviewedBy: (req.user as any).id,
+          executiveReviewedAt: new Date()
         });
       }
       
