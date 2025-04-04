@@ -41,9 +41,11 @@ export default function Header({ user, isLoading }: HeaderProps) {
     <header className="bg-primary text-white shadow-md">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         <div className="flex items-center gap-3">
-          <LavLogo variant="white" size={48} />
           <Link href="/">
-            <h1 className="text-xl font-bold cursor-pointer">Kaizen Öneri Sistemi</h1>
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-bold text-white">LAV</span>
+              <h1 className="text-xl font-bold cursor-pointer">Kaizen Öneri Sistemi</h1>
+            </div>
           </Link>
         </div>
         <div className="flex items-center space-x-4">
