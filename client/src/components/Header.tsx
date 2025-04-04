@@ -38,12 +38,12 @@ export default function Header({ user, isLoading }: HeaderProps) {
   };
 
   return (
-    <header className="bg-primary text-white shadow-md">
+    <header className="bg-white text-gray-800 shadow-md border-b border-gray-200">
       <div className="container mx-auto px-4 py-3 flex justify-between items-center">
         <div className="flex items-center gap-3">
           <Link href="/">
             <div className="flex items-center gap-2">
-              <span className="text-xl font-bold text-white">LAV</span>
+              <span className="text-xl font-bold text-primary">LAV</span>
               <h1 className="text-xl font-bold cursor-pointer">Kaizen Öneri Sistemi</h1>
             </div>
           </Link>
