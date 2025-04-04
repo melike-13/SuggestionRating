@@ -135,16 +135,16 @@ export default function FeasibilityAssessmentForm({ suggestion, onClose }: Feasi
       
       // Değerlendirme sonuçlarını kaydet
       const response = await apiRequest("PATCH", `/api/suggestions/${suggestion.id}/feasibility`, {
-        feasibilityScore: overallScore,
+        feasibilityScore: Number(overallScore),
         feasibilityFeedback: feedback,
         status: newStatus,
-        innovation_score: scoreItems.find(item => item.id === "INNOVATION")?.score,
-        safety_score: scoreItems.find(item => item.id === "SAFETY")?.score,
-        environment_score: scoreItems.find(item => item.id === "ENVIRONMENT")?.score,
-        employee_satisfaction_score: scoreItems.find(item => item.id === "EMPLOYEE_SATISFACTION")?.score,
-        technological_compatibility_score: scoreItems.find(item => item.id === "TECHNOLOGICAL_COMPATIBILITY")?.score,
-        implementation_ease_score: scoreItems.find(item => item.id === "IMPLEMENTATION_EASE")?.score,
-        cost_benefit_score: scoreItems.find(item => item.id === "COST_BENEFIT")?.score,
+        innovationScore: Number(scoreItems.find(item => item.id === "INNOVATION")?.score || 0),
+        safetyScore: Number(scoreItems.find(item => item.id === "SAFETY")?.score || 0),
+        environmentScore: Number(scoreItems.find(item => item.id === "ENVIRONMENT")?.score || 0),
+        employeeSatisfactionScore: Number(scoreItems.find(item => item.id === "EMPLOYEE_SATISFACTION")?.score || 0),
+        technologicalCompatibilityScore: Number(scoreItems.find(item => item.id === "TECHNOLOGICAL_COMPATIBILITY")?.score || 0),
+        implementationEaseScore: Number(scoreItems.find(item => item.id === "IMPLEMENTATION_EASE")?.score || 0),
+        costBenefitScore: Number(scoreItems.find(item => item.id === "COST_BENEFIT")?.score || 0),
       });
       
       if (response.ok) {

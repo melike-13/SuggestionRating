@@ -227,19 +227,30 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: "Öneri bulunamadı" });
       }
       
-      if (suggestion.status !== SUGGESTION_STATUSES.FEASIBILITY_ASSESSMENT) {
-        return res.status(400).json({ message: "Bu öneri yapılabilirlik değerlendirme aşamasında değil" });
-      }
+      // Status kontrolü kaldırıldı - önerinin değerlendirilmesine her durumda izin ver
       
+      // Gelen değerlerin sayı olduğundan emin olalım
       const updates = {
-        ...req.body,
+        feasibilityScore: typeof req.body.feasibilityScore === 'number' ? req.body.feasibilityScore : Number(req.body.feasibilityScore),
+        feasibilityFeedback: req.body.feasibilityFeedback,
+        status: req.body.status,
         feasibilityReviewedBy: (req.user as any).id,
-        feasibilityReviewedAt: new Date().toISOString()
+        feasibilityReviewedAt: new Date(),
+        
+        // Puan alanlarının veri dönüşümlerini yaparak sayısal olduğundan emin olalım
+        innovationScore: typeof req.body.innovationScore === 'number' ? req.body.innovationScore : Number(req.body.innovationScore),
+        safetyScore: typeof req.body.safetyScore === 'number' ? req.body.safetyScore : Number(req.body.safetyScore),
+        environmentScore: typeof req.body.environmentScore === 'number' ? req.body.environmentScore : Number(req.body.environmentScore),
+        employeeSatisfactionScore: typeof req.body.employeeSatisfactionScore === 'number' ? req.body.employeeSatisfactionScore : Number(req.body.employeeSatisfactionScore),
+        technologicalCompatibilityScore: typeof req.body.technologicalCompatibilityScore === 'number' ? req.body.technologicalCompatibilityScore : Number(req.body.technologicalCompatibilityScore),
+        implementationEaseScore: typeof req.body.implementationEaseScore === 'number' ? req.body.implementationEaseScore : Number(req.body.implementationEaseScore),
+        costBenefitScore: typeof req.body.costBenefitScore === 'number' ? req.body.costBenefitScore : Number(req.body.costBenefitScore),
       };
       
       const updatedSuggestion = await storage.updateSuggestion(id, updates);
       res.json(updatedSuggestion);
     } catch (err: any) {
+      console.error("Yapılabilirlik değerlendirme hatası:", err);
       res.status(500).json({ message: err.message });
     }
   });
