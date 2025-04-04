@@ -248,48 +248,49 @@ export default function SuggestionDetailModal({
           updateData.feasibilityScore = feasibilityScore;
           updateData.feasibilityFeedback = feasibilityFeedback;
           updateData.feasibilityReviewedBy = currentUser?.id;
-          updateData.feasibilityReviewedAt = new Date();
+          // Tarih alanını null veya string olarak değil, string tarih olarak gönderme
+          updateData.feasibilityReviewedAt = new Date().toISOString();
           break;
           
         case SUGGESTION_STATUSES.SOLUTION_IDENTIFIED:
           updateData.solutionDescription = solutionDescription;
           updateData.solutionProposedBy = currentUser?.id;
-          updateData.solutionProposedAt = new Date();
+          updateData.solutionProposedAt = new Date().toISOString();
           break;
           
         case SUGGESTION_STATUSES.COST_ASSESSMENT:
           updateData.costScore = costScore;
           updateData.costDetails = costDetails;
           updateData.costReviewedBy = currentUser?.id;
-          updateData.costReviewedAt = new Date();
+          updateData.costReviewedAt = new Date().toISOString();
           break;
           
         case SUGGESTION_STATUSES.EXECUTIVE_REVIEW:
           updateData.executiveFeedback = executiveFeedback;
           updateData.executiveReviewedBy = currentUser?.id;
-          updateData.executiveReviewedAt = new Date();
+          updateData.executiveReviewedAt = new Date().toISOString();
           break;
           
         case SUGGESTION_STATUSES.IN_PROGRESS:
           updateData.implementationNotes = implementationNotes;
-          updateData.implementationStartedAt = new Date();
+          updateData.implementationStartedAt = new Date().toISOString();
           break;
           
         case SUGGESTION_STATUSES.COMPLETED:
-          updateData.implementationCompletedAt = new Date();
+          updateData.implementationCompletedAt = new Date().toISOString();
           break;
           
         case SUGGESTION_STATUSES.REPORTED:
           updateData.reportDetails = reportDetails;
           updateData.reportedBy = currentUser?.id;
-          updateData.reportedAt = new Date();
+          updateData.reportedAt = new Date().toISOString();
           break;
           
         case SUGGESTION_STATUSES.EVALUATED:
           updateData.evaluationScore = evaluationScore;
           updateData.evaluationNotes = evaluationNotes;
           updateData.evaluatedBy = currentUser?.id;
-          updateData.evaluatedAt = new Date();
+          updateData.evaluatedAt = new Date().toISOString();
           break;
       }
       

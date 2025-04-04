@@ -144,10 +144,18 @@ export class DatabaseStorage implements IStorage {
     Object.keys(processedUpdates).forEach(key => {
       const value = (processedUpdates as any)[key];
       
-      // Eğer bir tarih alanıysa ve string gelmediyse düzelt
-      if (value instanceof Date) {
-        // Veritabanına tarih olarak kaydet, ISO string'e dönüştürme
-        // Drizzle zaten Date nesnelerini otomatik olarak işleyecek
+      // ISO string tarih formatını Date objesine çevir
+      if (typeof value === 'string' && (
+          key.includes('At') || // submittedAt, reviewedAt gibi tarih alanları
+          key.endsWith('At')    // tarihlerin sonu genelde At ile bitiyor
+      )) {
+        try {
+          // ISO string'i Date objesine çevir
+          (processedUpdates as any)[key] = new Date(value);
+        } catch (e) {
+          // Geçersiz tarih formatı ise değeri olduğu gibi bırak
+          console.warn(`Invalid date format for field ${key}: ${value}`);
+        }
       }
       
       // undefined alanları kaldır
