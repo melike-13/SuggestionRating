@@ -3,6 +3,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { Zap, Sparkles } from "lucide-react";
+import { useAuth } from "@/App";
+import { useToast } from "@/hooks/use-toast";
 
 interface SuggestionTypeSelectionProps {
   user: User | null;
@@ -10,6 +12,8 @@ interface SuggestionTypeSelectionProps {
 
 export default function SuggestionTypeSelection({ user }: SuggestionTypeSelectionProps) {
   const [_, setLocation] = useLocation();
+  const { setSelectedSuggestionType } = useAuth();
+  const { toast } = useToast();
 
   if (!user) {
     setLocation("/");
@@ -17,8 +21,30 @@ export default function SuggestionTypeSelection({ user }: SuggestionTypeSelectio
   }
 
   const handleSelection = (type: string) => {
-    localStorage.setItem("selectedSuggestionType", type);
-    setLocation("/dashboard");
+    try {
+      // Hem localStorage'a hem de context'e kaydet
+      localStorage.setItem("selectedSuggestionType", type);
+      setSelectedSuggestionType(type);
+      console.log("Seçilen öneri tipi:", type);
+      
+      // Kullanıcıya bilgi ver
+      toast({
+        title: "Öneri tipi seçildi",
+        description: type === "kaizen" ? "Kaizen önerisi oluşturmaya yönlendiriliyorsunuz." : "Kıvılcım önerisi oluşturmaya yönlendiriliyorsunuz.",
+      });
+      
+      // Kullanıcıyı dashboard'a yönlendir
+      setTimeout(() => {
+        setLocation("/dashboard");
+      }, 500);
+    } catch (error) {
+      console.error("Öneri tipi seçiminde hata:", error);
+      toast({
+        title: "Hata",
+        description: "Öneri tipi seçilirken bir hata oluştu. Lütfen tekrar deneyin.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
