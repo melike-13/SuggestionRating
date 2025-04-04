@@ -19,8 +19,8 @@ export type AuthContextType = {
 
 function App() {
   const [location, setLocation] = useLocation();
-  const { data, isLoading } = useQuery<{ user: User | null }>({ 
-    queryKey: ['/api/auth/user'],
+  const { data, isLoading } = useQuery<{ user: User | null }>({
+    queryKey: ["/api/auth/user"],
   });
 
   const user = data?.user || null;
@@ -35,26 +35,33 @@ function App() {
   return (
     <div className="min-h-screen flex flex-col">
       <Header user={user} isLoading={isLoading} />
-      
+
       <main className="flex-grow container mx-auto px-4 py-6">
         <Switch>
           <Route path="/login" component={() => <LoginPage />} />
           <Route path="/" component={Dashboard} />
           <Route path="/suggestions" component={SuggestionsList} />
           <Route path="/create" component={CreateSuggestion} />
-          <Route path="/admin" component={() => {
-            if (user?.isAdmin) {
-              return <AdminPanel />;
-            } else {
-              // Admin olmayan kullanıcılar için yönlendirme
-              setTimeout(() => setLocation("/"), 0);
-              return <div>Yetkisiz erişim, ana sayfaya yönlendiriliyorsunuz...</div>;
-            }
-          }} />
+          <Route
+            path="/admin"
+            component={() => {
+              if (user?.isAdmin) {
+                return <AdminPanel />;
+              } else {
+                // Admin olmayan kullanıcılar için yönlendirme
+                setTimeout(() => setLocation("/"), 0);
+                return (
+                  <div>
+                    Yetkisiz erişim, ana sayfaya yönlendiriliyorsunuz...
+                  </div>
+                );
+              }
+            }}
+          />
           <Route component={NotFound} />
         </Switch>
       </main>
-      
+
       <Footer />
       <Toaster />
     </div>
@@ -66,11 +73,11 @@ function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [, setLocation] = useLocation();
-  
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
-    
+
     try {
       const response = await fetch("/api/auth/login", {
         method: "POST",
@@ -80,10 +87,10 @@ function LoginPage() {
         body: JSON.stringify({ username, password }),
         credentials: "include",
       });
-      
+
       if (response.ok) {
         // Oturum açma başarılı, sayfayı yenileyelim (zorla yeniden yükleme)
-        await queryClient.invalidateQueries({ queryKey: ['/api/auth/user'] });
+        await queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
         window.location.href = "/"; // Sayfayı tamamen yeniden yükle
       } else {
         const data = await response.json();
@@ -93,24 +100,29 @@ function LoginPage() {
       setError(err.message || "An unexpected error occurred");
     }
   };
-  
+
   return (
     <div className="min-h-[80vh] flex items-center justify-center">
       <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-primary">Kaizen Öneri Sistemi</h1>
-          <p className="mt-2 text-gray-600">Giriş yaparak önerilerinizi paylaşabilirsiniz</p>
+          <h1 className="text-2xl font-bold text-primary">
+            Kaizen Öneri Sistemi
+          </h1>
+          <p className="mt-2 text-gray-600">
+            Giriş yaparak önerilerinizi paylaşabilirsiniz
+          </p>
         </div>
-        
+
         {error && (
-          <div className="p-3 bg-red-100 text-red-700 rounded-md">
-            {error}
-          </div>
+          <div className="p-3 bg-red-100 text-red-700 rounded-md">{error}</div>
         )}
-        
+
         <form onSubmit={handleLogin} className="mt-8 space-y-6">
           <div>
-            <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="username"
+              className="block text-sm font-medium text-gray-700"
+            >
               Kullanıcı Adı
             </label>
             <input
@@ -123,9 +135,12 @@ function LoginPage() {
               className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
-          
+
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium text-gray-700"
+            >
               Şifre
             </label>
             <input
@@ -138,7 +153,7 @@ function LoginPage() {
               className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
             />
           </div>
-          
+
           <div>
             <button
               type="submit"
@@ -147,7 +162,7 @@ function LoginPage() {
               Giriş Yap
             </button>
           </div>
-          
+
           <div className="text-sm text-center text-gray-500">
             <p>Kullanıcı adı: admin, Şifre: admin123 (Yönetici)</p>
             <p>Kullanıcı adı: employee, Şifre: employee123 (Çalışan)</p>

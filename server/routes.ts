@@ -2,7 +2,6 @@ import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import session from "express-session";
-import MemoryStore from "memorystore";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { 
@@ -13,8 +12,6 @@ import {
 } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
 
-const MemoryStoreSession = MemoryStore(session);
-
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup session middleware
   app.use(
@@ -22,9 +19,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       secret: "kaizen-app-secret",
       resave: false,
       saveUninitialized: false,
-      store: new MemoryStoreSession({
-        checkPeriod: 86400000, // prune expired entries every 24h
-      }),
+      store: storage.sessionStore,
       cookie: {
         maxAge: 24 * 60 * 60 * 1000, // 24 hours
       },

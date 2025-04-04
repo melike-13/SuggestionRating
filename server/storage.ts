@@ -4,6 +4,13 @@ import {
   rewards, type Reward, type InsertReward,
   SUGGESTION_STATUSES
 } from "@shared/schema";
+import { db } from "./db";
+import { eq, desc } from "drizzle-orm";
+import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
+import { pool } from "./db";
+
+const PostgresStore = connectPgSimple(session);
 
 export interface IStorage {
   // User methods
@@ -31,136 +38,132 @@ export interface IStorage {
     byStatus: Record<string, number>;
   }>;
   getTopContributors(limit: number): Promise<{userId: number, count: number}[]>;
+  
+  // Session store
+  sessionStore: session.Store;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private suggestions: Map<number, Suggestion>;
-  private rewards: Map<number, Reward>;
-  private userId: number;
-  private suggestionId: number;
-  private rewardId: number;
+export class DatabaseStorage implements IStorage {
+  sessionStore: session.Store;
 
   constructor() {
-    this.users = new Map();
-    this.suggestions = new Map();
-    this.rewards = new Map();
-    this.userId = 1;
-    this.suggestionId = 1;
-    this.rewardId = 1;
-    
-    // Create default admin user
-    this.createUser({
-      username: "admin",
-      password: "admin123",
-      displayName: "Administrator",
-      isAdmin: true
+    // Session store'u oluştur
+    this.sessionStore = new PostgresStore({ 
+      pool, 
+      createTableIfMissing: true 
     });
     
-    // Create default regular user
-    this.createUser({
-      username: "employee",
-      password: "employee123",
-      displayName: "Test Employee",
-      isAdmin: false
-    });
+    // Constructor'da varsayılan kullanıcıları oluştur, eğer yoksa
+    this.seedDefaultUsers();
+  }
+
+  private async seedDefaultUsers() {
+    // Admin kullanıcı var mı kontrol et
+    const adminUser = await this.getUserByUsername("admin");
+    if (!adminUser) {
+      // Admin kullanıcı yoksa oluştur
+      await this.createUser({
+        username: "admin",
+        password: "admin123",
+        displayName: "Administrator",
+        isAdmin: true
+      });
+    }
+    
+    // Normal kullanıcı var mı kontrol et
+    const employeeUser = await this.getUserByUsername("employee");
+    if (!employeeUser) {
+      // Normal kullanıcı yoksa oluştur
+      await this.createUser({
+        username: "employee",
+        password: "employee123",
+        displayName: "Test Employee",
+        isAdmin: false
+      });
+    }
   }
 
   // User methods
   async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
   }
-
+  
   async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+    const [user] = await db.select().from(users).where(eq(users.username, username));
+    return user;
   }
-
+  
   async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.userId++;
-    const user: User = { ...insertUser, id };
-    this.users.set(id, user);
+    const [user] = await db.insert(users).values(insertUser).returning();
     return user;
   }
   
   async listUsers(): Promise<User[]> {
-    return Array.from(this.users.values());
+    return await db.select().from(users);
   }
   
   // Suggestion methods
   async getSuggestion(id: number): Promise<Suggestion | undefined> {
-    return this.suggestions.get(id);
+    const [suggestion] = await db.select().from(suggestions).where(eq(suggestions.id, id));
+    return suggestion;
   }
   
   async createSuggestion(insertSuggestion: InsertSuggestion): Promise<Suggestion> {
-    const id = this.suggestionId++;
     const now = new Date();
-    const suggestion: Suggestion = { 
+    const suggestionData = { 
       ...insertSuggestion, 
-      id, 
       status: SUGGESTION_STATUSES.NEW,
       submittedAt: now,
-      rating: null,
-      feedback: null,
-      reviewedBy: null,
-      reviewedAt: null
     };
-    this.suggestions.set(id, suggestion);
+    
+    const [suggestion] = await db.insert(suggestions).values(suggestionData).returning();
     return suggestion;
   }
   
   async updateSuggestion(id: number, updates: Partial<Suggestion>): Promise<Suggestion | undefined> {
-    const suggestion = this.suggestions.get(id);
-    if (!suggestion) return undefined;
-    
-    const updatedSuggestion = { ...suggestion, ...updates };
-    this.suggestions.set(id, updatedSuggestion);
+    const [updatedSuggestion] = await db
+      .update(suggestions)
+      .set(updates)
+      .where(eq(suggestions.id, id))
+      .returning();
+      
     return updatedSuggestion;
   }
   
   async listSuggestions(): Promise<Suggestion[]> {
-    return Array.from(this.suggestions.values());
+    return await db.select().from(suggestions);
   }
   
   async listSuggestionsByStatus(status: string): Promise<Suggestion[]> {
-    return Array.from(this.suggestions.values())
-      .filter(suggestion => suggestion.status === status);
+    return await db.select().from(suggestions).where(eq(suggestions.status, status));
   }
   
   async listSuggestionsByUser(userId: number): Promise<Suggestion[]> {
-    return Array.from(this.suggestions.values())
-      .filter(suggestion => suggestion.submittedBy === userId);
+    return await db.select().from(suggestions).where(eq(suggestions.submittedBy, userId));
   }
   
   // Reward methods
   async getReward(id: number): Promise<Reward | undefined> {
-    return this.rewards.get(id);
+    const [reward] = await db.select().from(rewards).where(eq(rewards.id, id));
+    return reward;
   }
   
   async createReward(insertReward: InsertReward): Promise<Reward> {
-    const id = this.rewardId++;
-    const now = new Date();
-    const reward: Reward = {
-      ...insertReward,
-      id,
-      assignedAt: now
-    };
-    this.rewards.set(id, reward);
+    const [reward] = await db.insert(rewards).values(insertReward).returning();
     return reward;
   }
   
   async listRewardsBySuggestion(suggestionId: number): Promise<Reward[]> {
-    return Array.from(this.rewards.values())
-      .filter(reward => reward.suggestionId === suggestionId);
+    return await db.select().from(rewards).where(eq(rewards.suggestionId, suggestionId));
   }
   
   // Statistics
   async getSuggestionStats(): Promise<{ total: number; byStatus: Record<string, number> }> {
-    const suggestions = Array.from(this.suggestions.values());
+    const suggestions = await this.listSuggestions();
     const total = suggestions.length;
-    
     const byStatus: Record<string, number> = {};
+    
     suggestions.forEach(suggestion => {
       if (!byStatus[suggestion.status]) {
         byStatus[suggestion.status] = 0;
@@ -172,7 +175,7 @@ export class MemStorage implements IStorage {
   }
   
   async getTopContributors(limit: number): Promise<{ userId: number; count: number }[]> {
-    const suggestions = Array.from(this.suggestions.values());
+    const suggestions = await this.listSuggestions();
     const contributorCounts: Record<number, number> = {};
     
     suggestions.forEach(suggestion => {
@@ -189,4 +192,4 @@ export class MemStorage implements IStorage {
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new DatabaseStorage();
