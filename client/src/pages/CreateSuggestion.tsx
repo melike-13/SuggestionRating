@@ -7,6 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -20,27 +22,51 @@ import {
   User 
 } from "@shared/schema";
 import { z } from "zod";
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, Suspense } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Upload, PlusCircle, X, User as UserIcon, Sparkles, Zap } from "lucide-react";
+import { Upload, PlusCircle, X, User as UserIcon, Sparkles, Zap, Calculator, Loader2 } from "lucide-react";
+import KivilcimForm from "@/components/KivilcimForm";
 
-// Transform the schema for form usage
-const formSchema = extendedInsertSuggestionSchema.omit({ submittedBy: true });
+// Genişletilmiş form şeması
+const formSchema = extendedInsertSuggestionSchema.omit({ submittedBy: true }).extend({
+  internalConsultant: z.string().optional(),
+  costCalculationDetails: z.object({
+    materials: z.array(z.object({
+      description: z.string(),
+      amount: z.number(),
+      unitPrice: z.number(),
+      totalPrice: z.number()
+    })).optional(),
+    labor: z.array(z.object({
+      description: z.string(),
+      amount: z.number(),
+      unitPrice: z.number(),
+      totalPrice: z.number()
+    })).optional(),
+    other: z.array(z.object({
+      description: z.string(),
+      amount: z.number(),
+      unitPrice: z.number(),
+      totalPrice: z.number()
+    })).optional()
+  }).optional(),
+  preChecklistItems: z.array(z.boolean()).optional()
+});
 
 export default function CreateSuggestion() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [, setLocation] = useLocation();
   
-  // Get current user and suggestion type
+  // Kullanıcı bilgisini ve öneri türünü al
   const { data: userData } = useQuery<{ user: User | null }>({ 
     queryKey: ['/api/auth/user'],
   });
   
   const currentUser = userData?.user || null;
   // Öneri tipini localStorage'dan alıyoruz
-  const selectedSuggestionType = localStorage.getItem("selectedSuggestionType");
+  const selectedSuggestionType = localStorage.getItem("selectedSuggestionType") || "kaizen";
   
   // Yüklenen dosyalar için state
   const [currentStateFiles, setCurrentStateFiles] = useState<string[]>([]);
@@ -54,7 +80,7 @@ export default function CreateSuggestion() {
     enabled: !!currentUser?.isAdmin, // Sadece admin kullanıcılar kullanıcı listesini çekebilir
   });
   
-  // Departman listesi (gerçek listede güncellenebilir)
+  // Departman listesi
   const departments = [
     "Üretim",
     "Kalite",
@@ -285,13 +311,11 @@ export default function CreateSuggestion() {
                     )}
                   />
                 </div>
-                
-                {/* Kategori alanı kaldırıldı */}
               </CardContent>
             </Card>
             
-            {/* 2. Bölüm: Ekip Üyeleri ve Proje Lideri */}
-            {selectedSuggestionType === "kaizen" && (
+            {/* 2. Bölüm: Ekip Üyeleri ve Proje Lideri (Sadece Kaizen için) / Kıvılcım Formu (Kıvılcım için) */}
+            {selectedSuggestionType === "kaizen" ? (
               <Card className="mb-4">
                 <CardContent className="pt-6">
                   <h3 className="text-lg font-semibold mb-4">2. Ekip Bilgileri</h3>
@@ -392,156 +416,169 @@ export default function CreateSuggestion() {
                   </div>
                 </CardContent>
               </Card>
+            ) : (
+              <Suspense fallback={<div className="flex items-center justify-center py-10"><Loader2 className="h-6 w-6 animate-spin" /></div>}>
+                <KivilcimForm 
+                  form={form}
+                  currentUser={currentUser}
+                  currentStateFiles={currentStateFiles}
+                  setCurrentStateFiles={setCurrentStateFiles}
+                  improvementFiles={improvementFiles}
+                  setImprovementFiles={setImprovementFiles}
+                />
+              </Suspense>
             )}
             
-            {/* Öneri Detayları */}
-            <Card className="mb-4">
-              <CardContent className="pt-6">
-                <h3 className="text-lg font-semibold mb-4">
-                  {selectedSuggestionType === "kaizen" ? "3. Kaizen Detayları" : "2. Kıvılcım Detayları"}
-                </h3>
-                
-                <FormField
-                  control={form.control}
-                  name="description"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Mevcut Durumun Tanımlanması *</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Mevcut durumu detaylı olarak açıklayın" 
-                          className="resize-none" 
-                          rows={5}
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Problemin ne olduğunu, etkilerini ve neden çözülmesi gerektiğini açıklayın.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <div className="mt-4">
-                  <FormLabel>Mevcut Durum Dosyaları (İsteğe bağlı)</FormLabel>
-                  <div className="mt-2 p-4 border border-dashed rounded-md text-center bg-gray-50">
-                    <Upload className="h-8 w-8 mx-auto text-gray-400 mb-2" />
-                    <p className="text-sm text-gray-500">
-                      Mevcut durumu gösteren fotoğraf veya dokümanları yükleyin
-                    </p>
-                    <Button 
-                      type="button" 
-                      variant="secondary" 
-                      size="sm" 
-                      className="mt-2"
-                      onClick={() => {
-                        // Normalde dosya yükleme işlemi burada yapılır
-                        // Örnek olarak dosya URL'si ekliyoruz
-                        const newFiles = [...currentStateFiles, "example_file_" + Date.now() + ".jpg"];
-                        setCurrentStateFiles(newFiles);
-                        form.setValue("currentStateFiles", newFiles);
-                      }}
-                    >
-                      Dosya Seç
-                    </Button>
-                    
-                    {currentStateFiles.length > 0 && (
-                      <div className="mt-3 space-y-2">
-                        {currentStateFiles.map((file, index) => (
-                          <div key={index} className="flex items-center justify-between bg-white p-2 rounded text-sm">
-                            <span className="truncate">{file}</span>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                const newFiles = [...currentStateFiles];
-                                newFiles.splice(index, 1);
-                                setCurrentStateFiles(newFiles);
-                                form.setValue("currentStateFiles", newFiles);
-                              }}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
+            {/* Öneri Detayları - Sadece Kaizen formu için görünür */}
+            {selectedSuggestionType === "kaizen" && (
+              <Card className="mb-4">
+                <CardContent className="pt-6">
+                  <h3 className="text-lg font-semibold mb-4">
+                    3. Kaizen Detayları
+                  </h3>
+                  
+                  <FormField
+                    control={form.control}
+                    name="description"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Mevcut Durumun Tanımlanması *</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Mevcut durumu detaylı olarak açıklayın" 
+                            className="resize-none" 
+                            rows={5}
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Problemin ne olduğunu, etkilerini ve neden çözülmesi gerektiğini açıklayın.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
                     )}
+                  />
+                  
+                  <div className="mt-4">
+                    <FormLabel>Mevcut Durum Dosyaları (İsteğe bağlı)</FormLabel>
+                    <div className="mt-2 p-4 border border-dashed rounded-md text-center bg-gray-50">
+                      <Upload className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                      <p className="text-sm text-gray-500">
+                        Mevcut durumu gösteren fotoğraf veya dokümanları yükleyin
+                      </p>
+                      <Button 
+                        type="button" 
+                        variant="secondary" 
+                        size="sm" 
+                        className="mt-2"
+                        onClick={() => {
+                          // Normalde dosya yükleme işlemi burada yapılır
+                          // Örnek olarak dosya URL'si ekliyoruz
+                          const newFiles = [...currentStateFiles, "example_file_" + Date.now() + ".jpg"];
+                          setCurrentStateFiles(newFiles);
+                          form.setValue("currentStateFiles", newFiles);
+                        }}
+                      >
+                        Dosya Seç
+                      </Button>
+                      
+                      {currentStateFiles.length > 0 && (
+                        <div className="mt-3 space-y-2">
+                          {currentStateFiles.map((file, index) => (
+                            <div key={index} className="flex items-center justify-between bg-white p-2 rounded text-sm">
+                              <span className="truncate">{file}</span>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  const newFiles = [...currentStateFiles];
+                                  newFiles.splice(index, 1);
+                                  setCurrentStateFiles(newFiles);
+                                  form.setValue("currentStateFiles", newFiles);
+                                }}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-                
-                <FormField
-                  control={form.control}
-                  name="benefits"
-                  render={({ field }) => (
-                    <FormItem className="mt-4">
-                      <FormLabel>İyileştirme Önerisi *</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Önerdiğiniz iyileştirmeyi açıklayın" 
-                          className="resize-none" 
-                          rows={3}
-                          {...field} 
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Önerdiğiniz çözümü, uygulama adımlarını ve beklenen sonuçları açıklayın.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                
-                <div className="mt-4">
-                  <FormLabel>İyileştirme Önerisi Dosyaları (İsteğe bağlı)</FormLabel>
-                  <div className="mt-2 p-4 border border-dashed rounded-md text-center bg-gray-50">
-                    <Upload className="h-8 w-8 mx-auto text-gray-400 mb-2" />
-                    <p className="text-sm text-gray-500">
-                      İyileştirme önerinizle ilgili çizim, şema veya dokümanları yükleyin
-                    </p>
-                    <Button 
-                      type="button" 
-                      variant="secondary" 
-                      size="sm" 
-                      className="mt-2"
-                      onClick={() => {
-                        // Normalde dosya yükleme işlemi burada yapılır
-                        // Örnek olarak dosya URL'si ekliyoruz
-                        const newFiles = [...improvementFiles, "example_improvement_" + Date.now() + ".jpg"];
-                        setImprovementFiles(newFiles);
-                        form.setValue("improvementFiles", newFiles);
-                      }}
-                    >
-                      Dosya Seç
-                    </Button>
-                    
-                    {improvementFiles.length > 0 && (
-                      <div className="mt-3 space-y-2">
-                        {improvementFiles.map((file, index) => (
-                          <div key={index} className="flex items-center justify-between bg-white p-2 rounded text-sm">
-                            <span className="truncate">{file}</span>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                const newFiles = [...improvementFiles];
-                                newFiles.splice(index, 1);
-                                setImprovementFiles(newFiles);
-                                form.setValue("improvementFiles", newFiles);
-                              }}
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
+                  
+                  <FormField
+                    control={form.control}
+                    name="benefits"
+                    render={({ field }) => (
+                      <FormItem className="mt-4">
+                        <FormLabel>İyileştirme Önerisi *</FormLabel>
+                        <FormControl>
+                          <Textarea 
+                            placeholder="Önerdiğiniz iyileştirmeyi açıklayın" 
+                            className="resize-none" 
+                            rows={3}
+                            {...field} 
+                          />
+                        </FormControl>
+                        <FormDescription>
+                          Önerdiğiniz çözümü, uygulama adımlarını ve beklenen sonuçları açıklayın.
+                        </FormDescription>
+                        <FormMessage />
+                      </FormItem>
                     )}
+                  />
+                  
+                  <div className="mt-4">
+                    <FormLabel>İyileştirme Önerisi Dosyaları (İsteğe bağlı)</FormLabel>
+                    <div className="mt-2 p-4 border border-dashed rounded-md text-center bg-gray-50">
+                      <Upload className="h-8 w-8 mx-auto text-gray-400 mb-2" />
+                      <p className="text-sm text-gray-500">
+                        İyileştirme önerinizle ilgili çizim, şema veya dokümanları yükleyin
+                      </p>
+                      <Button 
+                        type="button" 
+                        variant="secondary" 
+                        size="sm" 
+                        className="mt-2"
+                        onClick={() => {
+                          // Normalde dosya yükleme işlemi burada yapılır
+                          // Örnek olarak dosya URL'si ekliyoruz
+                          const newFiles = [...improvementFiles, "example_improvement_" + Date.now() + ".jpg"];
+                          setImprovementFiles(newFiles);
+                          form.setValue("improvementFiles", newFiles);
+                        }}
+                      >
+                        Dosya Seç
+                      </Button>
+                      
+                      {improvementFiles.length > 0 && (
+                        <div className="mt-3 space-y-2">
+                          {improvementFiles.map((file, index) => (
+                            <div key={index} className="flex items-center justify-between bg-white p-2 rounded text-sm">
+                              <span className="truncate">{file}</span>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => {
+                                  const newFiles = [...improvementFiles];
+                                  newFiles.splice(index, 1);
+                                  setImprovementFiles(newFiles);
+                                  form.setValue("improvementFiles", newFiles);
+                                }}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
             
             {/* Şirkete Katkısı */}
             <Card className="mb-4">
@@ -561,12 +598,7 @@ export default function CreateSuggestion() {
                           placeholder="Bu önerinin şirkete sağlayacağı katkıları açıklayın" 
                           className="resize-none" 
                           rows={3}
-                          value={field.value || ""}
-                          onChange={field.onChange}
-                          onBlur={field.onBlur}
-                          disabled={field.disabled}
-                          name={field.name}
-                          ref={field.ref}
+                          {...field}
                         />
                       </FormControl>
                       <FormDescription>
