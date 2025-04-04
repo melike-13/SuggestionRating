@@ -35,17 +35,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(passport.session());
 
   passport.use(
-    new LocalStrategy(async (username, password, done) => {
+    new LocalStrategy({
+      // Şifre alanı gerekli olmadığı için passwordField'ı username ile aynı yapıyoruz
+      // Bu sayede LocalStrategy yapısını bozmadan sadece sicil numarası ile giriş yapılabilir
+      usernameField: 'username',
+      passwordField: 'username',
+    }, async (username, password, done) => {
       try {
         const user = await storage.getUserByUsername(username);
         
         if (!user) {
-          return done(null, false, { message: "Incorrect username" });
+          return done(null, false, { message: "Geçersiz sicil numarası" });
         }
         
-        if (user.password !== password) {
-          return done(null, false, { message: "Incorrect password" });
-        }
+        // Şifre kontrolü kaldırıldı - sadece sicil numarası yeterli
         
         return done(null, user);
       } catch (err) {

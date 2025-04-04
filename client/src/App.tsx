@@ -12,6 +12,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { User } from "@shared/schema";
+import LavLogo from "@/assets/lav-logo";
 
 export type AuthContextType = {
   user: User | null;
@@ -87,7 +88,6 @@ function App() {
 
 function LoginPage() {
   const [employeeId, setEmployeeId] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [, setLocation] = useLocation();
 
@@ -101,7 +101,11 @@ function LoginPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username: employeeId, password }), // username parametresi sicil no için kullanılıyor
+        body: JSON.stringify({ 
+          username: employeeId,
+          // Şifre artık gerekli değil, sicil no aynı zamanda şifre olarak kullanılacak
+          // Passport yapılandırması bunu destekleyecek şekilde değiştirildi
+        }),
         credentials: "include",
       });
 
@@ -111,7 +115,7 @@ function LoginPage() {
         window.location.href = "/"; // Sayfayı tamamen yeniden yükle
       } else {
         const data = await response.json();
-        setError(data.message || "Giriş başarısız");
+        setError(data.message || "Geçersiz sicil numarası");
       }
     } catch (err: any) {
       setError(err.message || "Beklenmeyen bir hata oluştu");
@@ -119,10 +123,13 @@ function LoginPage() {
   };
 
   return (
-    <div className="min-h-[80vh] flex items-center justify-center">
+    <div className="min-h-[80vh] flex flex-col md:flex-row items-center justify-center">
       <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-primary">
+        <div className="text-center mb-6">
+          <div className="flex justify-center mb-4">
+            <LavLogo size={100} />
+          </div>
+          <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-pink-500 bg-clip-text text-transparent">
             Kaizen Öneri Sistemi
           </h1>
           <p className="mt-2 text-gray-600">
@@ -155,24 +162,6 @@ function LoginPage() {
           </div>
 
           <div>
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Şifre
-            </label>
-            <input
-              id="password"
-              name="password"
-              type="password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-          </div>
-
-          <div>
             <button
               type="submit"
               className="w-full px-4 py-2 text-white bg-primary rounded-md hover:bg-opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary"
@@ -182,9 +171,10 @@ function LoginPage() {
           </div>
 
           <div className="text-sm text-center text-gray-500">
-            <p>Sicil No: 1001, Şifre: admin123 (Genel Müdür)</p>
-            <p>Sicil No: 2001, Şifre: manager123 (Bölüm Müdürü)</p>
-            <p>Sicil No: 3001, Şifre: employee123 (Çalışan)</p>
+            <p className="mb-1">Örnek kullanıcılar:</p>
+            <p>Sicil No: 1001 (Genel Müdür)</p>
+            <p>Sicil No: 2001 (Bölüm Müdürü)</p>
+            <p>Sicil No: 3001 (Çalışan)</p>
           </div>
         </form>
       </div>
