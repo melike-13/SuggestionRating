@@ -701,7 +701,7 @@ export default function SuggestionDetailModal({
                     </div>
                     <div>
                       <p className="font-medium">Çözüm Önerisi</p>
-                      <p className="text-sm text-neutral-600">{formatDate(suggestion.solutionProposedAt)}</p>
+                      <p className="text-sm text-neutral-600">{suggestion.solutionProposedAt ? formatDate(suggestion.solutionProposedAt) : "Tarih bilgisi yok"}</p>
                       {suggestion.solutionDescription && (
                         <p className="text-sm mt-1 border-l-2 border-neutral-300 pl-2">{suggestion.solutionDescription}</p>
                       )}
@@ -717,7 +717,7 @@ export default function SuggestionDetailModal({
                     </div>
                     <div>
                       <p className="font-medium">Maliyet Değerlendirmesi</p>
-                      <p className="text-sm text-neutral-600">{formatDate(suggestion.costReviewedAt)}</p>
+                      <p className="text-sm text-neutral-600">{suggestion.costReviewedAt ? formatDate(suggestion.costReviewedAt) : "Tarih bilgisi yok"}</p>
                       <p className="text-sm">Puan: {suggestion.costScore}/5</p>
                       {suggestion.costDetails && (
                         <p className="text-sm mt-1 border-l-2 border-neutral-300 pl-2">{suggestion.costDetails}</p>
@@ -734,7 +734,7 @@ export default function SuggestionDetailModal({
                     </div>
                     <div>
                       <p className="font-medium">Genel Müdür İncelemesi</p>
-                      <p className="text-sm text-neutral-600">{formatDate(suggestion.executiveReviewedAt)}</p>
+                      <p className="text-sm text-neutral-600">{suggestion.executiveReviewedAt ? formatDate(suggestion.executiveReviewedAt) : "Tarih bilgisi yok"}</p>
                       {suggestion.executiveFeedback && (
                         <p className="text-sm mt-1 border-l-2 border-neutral-300 pl-2">{suggestion.executiveFeedback}</p>
                       )}

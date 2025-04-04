@@ -182,7 +182,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Spesifik alan güncelleme - genel reviewedAt yerine durum bazlı alanlar kullan
       if (updates.status && updates.status !== suggestion.status) {
         const userId = (req.user as any).id;
-        const now = new Date().toISOString();
+        const now = new Date();
         
         // Duruma göre ilgili alanları güncelle
         switch(updates.status) {
