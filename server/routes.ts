@@ -153,10 +153,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Date objeleri yerine timestamp string kullan veya sil
       Object.keys(updates).forEach(key => {
-        // Date objesi toISOString hatası veriyorsa, tarih alanlarını string olarak kaydet
-        if (updates[key] && updates[key] instanceof Date) {
-          updates[key] = updates[key].toISOString();
-        }
+        // Date objesi toISOString hatası veriyorsa, Date olarak bırak
+        // Drizzle Date nesnelerini doğrudan veritabanına timestamp olarak kaydeder
         
         // null değerlerini koru ama undefined'ları sil
         if (updates[key] === undefined) {
