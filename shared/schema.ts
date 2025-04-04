@@ -91,6 +91,18 @@ export const suggestions = pgTable("suggestions", {
   feasibilityReviewedBy: integer("feasibility_reviewed_by"),
   feasibilityReviewedAt: timestamp("feasibility_reviewed_at"),
   
+  // Yapılabilirlik Kriterleri (1-5 arası puan)
+  innovationScore: integer("innovation_score"), // Yenilik/Yaratıcılık (%15)
+  safetyScore: integer("safety_score"), // İSG Etkisi (%15)
+  environmentScore: integer("environment_score"), // Çevre Etkisi (%15)
+  employeeSatisfactionScore: integer("employee_satisfaction_score"), // Çalışan Memnuniyeti (%15)
+  technologicalCompatibilityScore: integer("technological_compatibility_score"), // Teknolojik Uyum (%10)
+  implementationEaseScore: integer("implementation_ease_score"), // Uygulanabilme Kolaylığı (%10)
+  costBenefitScore: integer("cost_benefit_score"), // Maliyet (%20)
+  
+  // Ağırlıklı Hesaplama için Sabitler
+  // Bu alanlar veritabanında saklanmayacak, sadece kod içinde kullanılacak
+  
   // Çözüm önerisi
   solutionDescription: text("solution_description"),
   solutionProposedBy: integer("solution_proposed_by"),
@@ -130,6 +142,23 @@ export const suggestions = pgTable("suggestions", {
   reviewedAt: timestamp("reviewed_at"),
 });
 
+// Yapılabilirlik hesaplama ağırlıkları (yüzde olarak)
+export const FEASIBILITY_WEIGHTS = {
+  INNOVATION: 15, // Yenilik/Yaratıcılık
+  SAFETY: 15, // İSG Etkisi
+  ENVIRONMENT: 15, // Çevre Etkisi
+  EMPLOYEE_SATISFACTION: 15, // Çalışan Memnuniyeti
+  TECHNOLOGICAL_COMPATIBILITY: 10, // Teknolojik Uyum
+  IMPLEMENTATION_EASE: 10, // Uygulanabilme Kolaylığı
+  COST_BENEFIT: 20, // Maliyet
+} as const;
+
+// Yapılabilirlik değerlendirme sonuçları için eşik değerler
+export const FEASIBILITY_THRESHOLDS = {
+  MINIMUM_OVERALL_SCORE: 2.5, // Genel değerlendirme puanı en az 2.5 olmalı
+  NEEDS_EXECUTIVE_APPROVAL_COST_SCORE: 2 // Maliyet puanı 1 veya 2 ise genel müdür onayı gerekir
+} as const;
+
 export const insertSuggestionSchema = createInsertSchema(suggestions).omit({
   id: true,
   status: true,
@@ -145,6 +174,15 @@ export const insertSuggestionSchema = createInsertSchema(suggestions).omit({
   feasibilityFeedback: true,
   feasibilityReviewedBy: true,
   feasibilityReviewedAt: true,
+  
+  // Yapılabilirlik Kriterleri
+  innovationScore: true,
+  safetyScore: true,
+  environmentScore: true,
+  employeeSatisfactionScore: true,
+  technologicalCompatibilityScore: true,
+  implementationEaseScore: true,
+  costBenefitScore: true,
   
   // Çözüm önerisi
   solutionDescription: true,

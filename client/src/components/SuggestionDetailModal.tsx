@@ -16,6 +16,7 @@ import {
   TabsList, 
   TabsTrigger 
 } from "@/components/ui/tabs";
+import FeasibilityAssessmentForm from "./FeasibilityAssessmentForm";
 
 interface SuggestionDetailModalProps {
   open: boolean;
@@ -414,7 +415,7 @@ export default function SuggestionDetailModal({
               {suggestion.feasibilityScore && suggestion.feasibilityScore > 0 && (
                 <div>
                   <h5 className="text-sm font-medium text-neutral-700 mb-1">Yapılabilirlik Puanı</h5>
-                  <StarRating value={suggestion.feasibilityScore || 0} readOnly />
+                  <StarRating value={suggestion.feasibilityScore} readOnly max={5} />
                   {suggestion.feasibilityFeedback && (
                     <p className="text-sm text-neutral-600 mt-1">{suggestion.feasibilityFeedback}</p>
                   )}
@@ -424,7 +425,7 @@ export default function SuggestionDetailModal({
               {suggestion.costScore && suggestion.costScore > 0 && (
                 <div>
                   <h5 className="text-sm font-medium text-neutral-700 mb-1">Maliyet Puanı</h5>
-                  <StarRating value={suggestion.costScore || 0} readOnly max={5} />
+                  <StarRating value={suggestion.costScore} readOnly max={5} />
                   {suggestion.costDetails && (
                     <p className="text-sm text-neutral-600 mt-1">{suggestion.costDetails}</p>
                   )}
@@ -434,7 +435,7 @@ export default function SuggestionDetailModal({
               {suggestion.evaluationScore && suggestion.evaluationScore > 0 && (
                 <div>
                   <h5 className="text-sm font-medium text-neutral-700 mb-1">Değerlendirme Puanı</h5>
-                  <StarRating value={suggestion.evaluationScore || 0} readOnly max={5} />
+                  <StarRating value={suggestion.evaluationScore} readOnly max={5} />
                   {suggestion.evaluationNotes && (
                     <p className="text-sm text-neutral-600 mt-1">{suggestion.evaluationNotes}</p>
                   )}
@@ -443,206 +444,226 @@ export default function SuggestionDetailModal({
             </div>
           </TabsContent>
           
-          {/* İş Akışı Aşaması - Yöneticiler duruma göre buradan değerlendirme yapabilir */}
+          {/* İş Akışı */}
           <TabsContent value="workflow" className="space-y-4">
-            {isAdmin && (
-              <>
-                <div className="border p-4 rounded-lg shadow-sm">
-                  <h3 className="font-medium text-lg mb-3">Mevcut Aşama: {getStatusLabel(suggestion.status)}</h3>
-                  
-                  {/* Mevcut aşamaya göre gereken giriş alanları */}
-                  {suggestion.status === SUGGESTION_STATUSES.NEW || 
-                    suggestion.status === SUGGESTION_STATUSES.DEPARTMENT_REVIEW ? (
-                    <div className="space-y-4">
-                      <div>
-                        <Label>Bölüm Müdürü Değerlendirmesi</Label>
-                        <Textarea
-                          value={departmentFeedback}
-                          onChange={(e) => setDepartmentFeedback(e.target.value)}
-                          placeholder="Öneriyi değerlendirin..."
-                          className="resize-none"
-                          rows={3}
-                        />
-                      </div>
+            <div className="border rounded-lg shadow-sm p-4">
+              <h3 className="font-medium text-lg mb-3">İş Akışı Durumu: {getStatusLabel(suggestion.status)}</h3>
+              
+              {isAdmin && (
+                <div className="mt-2 mb-4">
+                  <div className="mb-2">
+                    <Label>Durum Değiştir</Label>
+                    <Select 
+                      value={status} 
+                      onValueChange={setStatus}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Durum seçin" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value={SUGGESTION_STATUSES.NEW}>Yeni</SelectItem>
+                        <SelectItem value={SUGGESTION_STATUSES.DEPARTMENT_REVIEW}>Bölüm Müdürü İncelemesi</SelectItem>
+                        <SelectItem value={SUGGESTION_STATUSES.FEASIBILITY_ASSESSMENT}>Yapılabilirlik Değerlendirmesi</SelectItem>
+                        <SelectItem value={SUGGESTION_STATUSES.FEASIBILITY_REJECTED}>Yapılabilirlik Reddedildi</SelectItem>
+                        <SelectItem value={SUGGESTION_STATUSES.SOLUTION_IDENTIFIED}>Çözüm Önerisi Belirlendi</SelectItem>
+                        <SelectItem value={SUGGESTION_STATUSES.COST_ASSESSMENT}>Maliyet Değerlendirmesi</SelectItem>
+                        <SelectItem value={SUGGESTION_STATUSES.COST_REJECTED}>Maliyet Puanı Düşük</SelectItem>
+                        <SelectItem value={SUGGESTION_STATUSES.EXECUTIVE_REVIEW}>Genel Müdür İncelemesi</SelectItem>
+                        <SelectItem value={SUGGESTION_STATUSES.APPROVED}>Onaylandı</SelectItem>
+                        <SelectItem value={SUGGESTION_STATUSES.REJECTED}>Reddedildi</SelectItem>
+                        <SelectItem value={SUGGESTION_STATUSES.IN_PROGRESS}>Uygulamada</SelectItem>
+                        <SelectItem value={SUGGESTION_STATUSES.COMPLETED}>Tamamlandı</SelectItem>
+                        <SelectItem value={SUGGESTION_STATUSES.REPORTED}>Raporlandı</SelectItem>
+                        <SelectItem value={SUGGESTION_STATUSES.EVALUATED}>Değerlendirildi</SelectItem>
+                        <SelectItem value={SUGGESTION_STATUSES.REWARDED}>Ödüllendirildi</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              )}
+              
+              <div className="space-y-6 mt-4">
+                {/* Her durum için gereken işlem formunu göster */}
+                {(suggestion.status === SUGGESTION_STATUSES.NEW || suggestion.status === SUGGESTION_STATUSES.DEPARTMENT_REVIEW) && isAdmin ? (
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Bölüm Müdürü Değerlendirmesi</Label>
+                      <Textarea
+                        value={departmentFeedback}
+                        onChange={(e) => setDepartmentFeedback(e.target.value)}
+                        placeholder="Öneriyi değerlendirin..."
+                        className="resize-none"
+                        rows={3}
+                      />
                     </div>
-                  ) : null}
-                  
-                  {suggestion.status === SUGGESTION_STATUSES.FEASIBILITY_ASSESSMENT && (
-                    <div className="space-y-4">
-                      <div>
-                        <Label>Yapılabilirlik Puanı (En az 2.5 olmalı)</Label>
-                        <StarRating 
-                          value={feasibilityScore} 
-                          onChange={setFeasibilityScore} 
-                          max={5} 
-                        />
-                      </div>
-                      <div>
-                        <Label>Yapılabilirlik Değerlendirmesi</Label>
-                        <Textarea
-                          value={feasibilityFeedback}
-                          onChange={(e) => setFeasibilityFeedback(e.target.value)}
-                          placeholder="Yapılabilirlik değerlendirmesi..."
-                          className="resize-none"
-                          rows={3}
-                        />
-                      </div>
+                  </div>
+                ) : null}
+                
+                {suggestion.status === SUGGESTION_STATUSES.FEASIBILITY_ASSESSMENT && (
+                  <FeasibilityAssessmentForm 
+                    suggestion={suggestion} 
+                    onClose={() => {
+                      // Verileri güncelle ve modalı kapat
+                      queryClient.invalidateQueries({ queryKey: ['/api/suggestions'] });
+                      queryClient.invalidateQueries({ queryKey: [`/api/suggestions/${suggestion.id}`] });
+                      queryClient.invalidateQueries({ queryKey: ['/api/stats/suggestions'] });
+                      onOpenChange(false);
+                    }}
+                  />
+                )}
+                
+                {suggestion.status === SUGGESTION_STATUSES.SOLUTION_IDENTIFIED && (
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Çözüm Önerisi</Label>
+                      <Textarea
+                        value={solutionDescription}
+                        onChange={(e) => setSolutionDescription(e.target.value)}
+                        placeholder="Çözüm önerisini detaylandırın..."
+                        className="resize-none"
+                        rows={4}
+                      />
                     </div>
-                  )}
-                  
-                  {suggestion.status === SUGGESTION_STATUSES.SOLUTION_IDENTIFIED && (
-                    <div className="space-y-4">
-                      <div>
-                        <Label>Çözüm Önerisi</Label>
-                        <Textarea
-                          value={solutionDescription}
-                          onChange={(e) => setSolutionDescription(e.target.value)}
-                          placeholder="Çözüm önerisini detaylandırın..."
-                          className="resize-none"
-                          rows={4}
-                        />
-                      </div>
+                  </div>
+                )}
+                
+                {suggestion.status === SUGGESTION_STATUSES.COST_ASSESSMENT && (
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Maliyet Puanı (En az 3 olmalı)</Label>
+                      <StarRating 
+                        value={costScore} 
+                        onChange={setCostScore}
+                        max={5} 
+                      />
                     </div>
-                  )}
-                  
-                  {suggestion.status === SUGGESTION_STATUSES.COST_ASSESSMENT && (
-                    <div className="space-y-4">
-                      <div>
-                        <Label>Maliyet Puanı (En az 3 olmalı)</Label>
-                        <StarRating 
-                          value={costScore} 
-                          onChange={setCostScore}
-                          max={5} 
-                        />
-                      </div>
-                      <div>
-                        <Label>Maliyet Detayları</Label>
-                        <Textarea
-                          value={costDetails}
-                          onChange={(e) => setCostDetails(e.target.value)}
-                          placeholder="Maliyet detaylarını yazın..."
-                          className="resize-none"
-                          rows={3}
-                        />
-                      </div>
+                    <div>
+                      <Label>Maliyet Detayları</Label>
+                      <Textarea
+                        value={costDetails}
+                        onChange={(e) => setCostDetails(e.target.value)}
+                        placeholder="Maliyet detaylarını yazın..."
+                        className="resize-none"
+                        rows={3}
+                      />
                     </div>
-                  )}
-                  
-                  {suggestion.status === SUGGESTION_STATUSES.EXECUTIVE_REVIEW && (
-                    <div className="space-y-4">
-                      <div>
-                        <Label>Genel Müdür Geri Bildirimi</Label>
-                        <Textarea
-                          value={executiveFeedback}
-                          onChange={(e) => setExecutiveFeedback(e.target.value)}
-                          placeholder="Onay veya ret geri bildirimi..."
-                          className="resize-none"
-                          rows={3}
+                  </div>
+                )}
+                
+                {suggestion.status === SUGGESTION_STATUSES.EXECUTIVE_REVIEW && (
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Genel Müdür Geri Bildirimi</Label>
+                      <Textarea
+                        value={executiveFeedback}
+                        onChange={(e) => setExecutiveFeedback(e.target.value)}
+                        placeholder="Onay veya ret geri bildirimi..."
+                        className="resize-none"
+                        rows={3}
+                      />
+                    </div>
+                    <div>
+                      <Label>İşlem</Label>
+                      <Select 
+                        value={status} 
+                        onValueChange={setStatus}
+                      >
+                        <SelectTrigger>
+                          <SelectValue placeholder="İşlem seçin" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={SUGGESTION_STATUSES.APPROVED}>Onayla</SelectItem>
+                          <SelectItem value={SUGGESTION_STATUSES.REJECTED}>Reddet</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                )}
+                
+                {suggestion.status === SUGGESTION_STATUSES.IN_PROGRESS && (
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Uygulama Notları</Label>
+                      <Textarea
+                        value={implementationNotes}
+                        onChange={(e) => setImplementationNotes(e.target.value)}
+                        placeholder="Uygulama sürecini açıklayın..."
+                        className="resize-none"
+                        rows={4}
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                {suggestion.status === SUGGESTION_STATUSES.REPORTED && (
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Rapor Detayları</Label>
+                      <Textarea
+                        value={reportDetails}
+                        onChange={(e) => setReportDetails(e.target.value)}
+                        placeholder="Uygulama sonucunu raporlayın..."
+                        className="resize-none"
+                        rows={4}
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                {suggestion.status === SUGGESTION_STATUSES.EVALUATED && (
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Değerlendirme Puanı</Label>
+                      <StarRating 
+                        value={evaluationScore} 
+                        onChange={setEvaluationScore}
+                        max={5} 
+                      />
+                    </div>
+                    <div>
+                      <Label>Değerlendirme Notları</Label>
+                      <Textarea
+                        value={evaluationNotes}
+                        onChange={(e) => setEvaluationNotes(e.target.value)}
+                        placeholder="Değerlendirme notlarını yazın..."
+                        className="resize-none"
+                        rows={3}
+                      />
+                    </div>
+                  </div>
+                )}
+                
+                {suggestion.status === SUGGESTION_STATUSES.REWARDED && (
+                  <div className="space-y-4">
+                    <div>
+                      <Label>Ödül</Label>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          value={rewardAmount}
+                          onChange={(e) => setRewardAmount(e.target.value)}
+                          placeholder="Miktar"
+                          className="w-40"
                         />
-                      </div>
-                      <div>
-                        <Label>İşlem</Label>
                         <Select 
-                          value={status} 
-                          onValueChange={setStatus}
+                          value={rewardType} 
+                          onValueChange={setRewardType}
                         >
-                          <SelectTrigger>
-                            <SelectValue placeholder="İşlem seçin" />
+                          <SelectTrigger className="w-32">
+                            <SelectValue placeholder="Tür seçin" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value={SUGGESTION_STATUSES.APPROVED}>Onayla</SelectItem>
-                            <SelectItem value={SUGGESTION_STATUSES.REJECTED}>Reddet</SelectItem>
+                            <SelectItem value={REWARD_TYPES.MONEY}>TL</SelectItem>
+                            <SelectItem value={REWARD_TYPES.POINTS}>Puan</SelectItem>
+                            <SelectItem value={REWARD_TYPES.GIFT}>Hediye</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
                     </div>
-                  )}
-                  
-                  {suggestion.status === SUGGESTION_STATUSES.IN_PROGRESS && (
-                    <div className="space-y-4">
-                      <div>
-                        <Label>Uygulama Notları</Label>
-                        <Textarea
-                          value={implementationNotes}
-                          onChange={(e) => setImplementationNotes(e.target.value)}
-                          placeholder="Uygulama sürecini açıklayın..."
-                          className="resize-none"
-                          rows={4}
-                        />
-                      </div>
-                    </div>
-                  )}
-                  
-                  {suggestion.status === SUGGESTION_STATUSES.REPORTED && (
-                    <div className="space-y-4">
-                      <div>
-                        <Label>Rapor Detayları</Label>
-                        <Textarea
-                          value={reportDetails}
-                          onChange={(e) => setReportDetails(e.target.value)}
-                          placeholder="Uygulama sonucunu raporlayın..."
-                          className="resize-none"
-                          rows={4}
-                        />
-                      </div>
-                    </div>
-                  )}
-                  
-                  {suggestion.status === SUGGESTION_STATUSES.EVALUATED && (
-                    <div className="space-y-4">
-                      <div>
-                        <Label>Değerlendirme Puanı</Label>
-                        <StarRating 
-                          value={evaluationScore} 
-                          onChange={setEvaluationScore}
-                          max={5} 
-                        />
-                      </div>
-                      <div>
-                        <Label>Değerlendirme Notları</Label>
-                        <Textarea
-                          value={evaluationNotes}
-                          onChange={(e) => setEvaluationNotes(e.target.value)}
-                          placeholder="Değerlendirme notlarını yazın..."
-                          className="resize-none"
-                          rows={3}
-                        />
-                      </div>
-                    </div>
-                  )}
-                  
-                  {suggestion.status === SUGGESTION_STATUSES.REWARDED && (
-                    <div className="space-y-4">
-                      <div>
-                        <Label>Ödül</Label>
-                        <div className="flex items-center gap-2">
-                          <Input
-                            type="number"
-                            value={rewardAmount}
-                            onChange={(e) => setRewardAmount(e.target.value)}
-                            placeholder="Miktar"
-                            className="w-40"
-                          />
-                          <Select 
-                            value={rewardType} 
-                            onValueChange={setRewardType}
-                          >
-                            <SelectTrigger className="w-32">
-                              <SelectValue placeholder="Tür seçin" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value={REWARD_TYPES.MONEY}>TL</SelectItem>
-                              <SelectItem value={REWARD_TYPES.POINTS}>Puan</SelectItem>
-                              <SelectItem value={REWARD_TYPES.GIFT}>Hediye</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
+                  </div>
+                )}
+              </div>
+            </div>
           </TabsContent>
           
           {/* Öneri Tarihçesi - Tüm durum değişiklikleri, kim tarafından yapıldığı, tarihi vb */}

@@ -216,6 +216,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Yapılabilirlik Değerlendirmesi güncelleme endpoint'i
+  app.patch("/api/suggestions/:id/feasibility", isAuthenticated, async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const suggestion = await storage.getSuggestion(id);
+      
+      if (!suggestion) {
+        return res.status(404).json({ message: "Öneri bulunamadı" });
+      }
+      
+      if (suggestion.status !== SUGGESTION_STATUSES.FEASIBILITY_ASSESSMENT) {
+        return res.status(400).json({ message: "Bu öneri yapılabilirlik değerlendirme aşamasında değil" });
+      }
+      
+      const updates = {
+        ...req.body,
+        feasibilityReviewedBy: (req.user as any).id,
+        feasibilityReviewedAt: new Date().toISOString()
+      };
+      
+      const updatedSuggestion = await storage.updateSuggestion(id, updates);
+      res.json(updatedSuggestion);
+    } catch (err: any) {
+      res.status(500).json({ message: err.message });
+    }
+  });
+
   app.get("/api/suggestions/status/:status", isAuthenticated, async (req, res) => {
     try {
       const suggestions = await storage.listSuggestionsByStatus(req.params.status);
