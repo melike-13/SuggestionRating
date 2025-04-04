@@ -3,7 +3,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { useLocation } from "wouter";
 import { Zap, Sparkles } from "lucide-react";
-import { useAuth } from "@/App";
 import { useToast } from "@/hooks/use-toast";
 
 interface SuggestionTypeSelectionProps {
@@ -12,7 +11,6 @@ interface SuggestionTypeSelectionProps {
 
 export default function SuggestionTypeSelection({ user }: SuggestionTypeSelectionProps) {
   const [_, setLocation] = useLocation();
-  const { setSelectedSuggestionType } = useAuth();
   const { toast } = useToast();
 
   if (!user) {
@@ -22,21 +20,20 @@ export default function SuggestionTypeSelection({ user }: SuggestionTypeSelectio
 
   const handleSelection = (type: string) => {
     try {
-      // Hem localStorage'a hem de context'e kaydet
-      localStorage.setItem("selectedSuggestionType", type);
-      setSelectedSuggestionType(type);
-      console.log("Seçilen öneri tipi:", type);
-      
       // Kullanıcıya bilgi ver
       toast({
         title: "Öneri tipi seçildi",
         description: type === "kaizen" ? "Kaizen önerisi oluşturmaya yönlendiriliyorsunuz." : "Kıvılcım önerisi oluşturmaya yönlendiriliyorsunuz.",
       });
       
-      // Kullanıcıyı dashboard'a yönlendir
+      // localStorage'a kaydet - App.tsx useEffect'te yakalanacak
+      localStorage.setItem("selectedSuggestionType", type);
+      
+      // Sayfayı yeniden yükleyerek App.tsx'teki useState'in localStorage'dan değeri okumasını sağlayalım
+      // Bu, Context API kullanımını atlamak için basit bir çözüm
       setTimeout(() => {
-        setLocation("/dashboard");
-      }, 500);
+        window.location.href = "/dashboard";
+      }, 800);
     } catch (error) {
       console.error("Öneri tipi seçiminde hata:", error);
       toast({

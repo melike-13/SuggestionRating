@@ -13,6 +13,7 @@ import { useState, useEffect, createContext, useContext } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { User } from "@shared/schema";
+import { useToast } from "@/hooks/use-toast";
 
 export type AuthContextType = {
   user: User | null;
