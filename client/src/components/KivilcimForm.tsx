@@ -10,7 +10,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow, TableFooter } from "@/components/ui/table";
+import type { MouseEvent } from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Upload, Calculator, PlusCircle, X } from "lucide-react";
@@ -43,9 +44,9 @@ const KivilcimForm: React.FC<KivilcimFormProps> = ({
   setImprovementFiles
 }) => {
   // Maliyet hesaplaması için state'ler
-  const [materialsCost, setMaterialsCost] = useState<CostItem[]>([{ description: "", amount: 0, unitPrice: 0, totalPrice: 0 }]);
-  const [laborCost, setLaborCost] = useState<CostItem[]>([{ description: "", amount: 0, unitPrice: 0, totalPrice: 0 }]);
-  const [otherCost, setOtherCost] = useState<CostItem[]>([{ description: "", amount: 0, unitPrice: 0, totalPrice: 0 }]);
+  const [currentCosts, setCurrentCosts] = useState<CostItem[]>([{ description: "", amount: 0, unitPrice: 0, totalPrice: 0 }]);
+  const [proposedCosts, setProposedCosts] = useState<CostItem[]>([{ description: "", amount: 0, unitPrice: 0, totalPrice: 0 }]);
+  const [additionalBenefits, setAdditionalBenefits] = useState<CostItem[]>([{ description: "", amount: 0, unitPrice: 0, totalPrice: 0 }]);
   
   // Öneri sahipleri için state (Maksimum 4 kişi)
   const [suggestionOwners, setSuggestionOwners] = useState<{name: string; role: string; department: string}[]>([]);
@@ -59,7 +60,7 @@ const KivilcimForm: React.FC<KivilcimFormProps> = ({
     index: number, 
     field: keyof CostItem, 
     value: string | number, 
-    costType: "materials" | "labor" | "other"
+    costType: "current" | "proposed" | "benefits"
   ) => {
     const updateState = (items: CostItem[]) => {
       const newItems = [...items];
@@ -85,61 +86,61 @@ const KivilcimForm: React.FC<KivilcimFormProps> = ({
     };
     
     switch (costType) {
-      case "materials":
-        setMaterialsCost(updateState(materialsCost));
+      case "current":
+        setCurrentCosts(updateState(currentCosts));
         break;
-      case "labor":
-        setLaborCost(updateState(laborCost));
+      case "proposed":
+        setProposedCosts(updateState(proposedCosts));
         break;
-      case "other":
-        setOtherCost(updateState(otherCost));
+      case "benefits":
+        setAdditionalBenefits(updateState(additionalBenefits));
         break;
     }
     
     // Form değerine kaydet
     const costCalculationDetails = {
-      materials: costType === "materials" ? updateState(materialsCost) : materialsCost,
-      labor: costType === "labor" ? updateState(laborCost) : laborCost,
-      other: costType === "other" ? updateState(otherCost) : otherCost
+      current: costType === "current" ? updateState(currentCosts) : currentCosts,
+      proposed: costType === "proposed" ? updateState(proposedCosts) : proposedCosts,
+      benefits: costType === "benefits" ? updateState(additionalBenefits) : additionalBenefits
     };
     
     form.setValue("costCalculationDetails", costCalculationDetails);
   };
 
-  const addCostItem = (costType: "materials" | "labor" | "other") => {
+  const addCostItem = (costType: "current" | "proposed" | "benefits") => {
     const newItem = { description: "", amount: 0, unitPrice: 0, totalPrice: 0 };
     
     switch (costType) {
-      case "materials":
-        setMaterialsCost([...materialsCost, newItem]);
+      case "current":
+        setCurrentCosts([...currentCosts, newItem]);
         break;
-      case "labor":
-        setLaborCost([...laborCost, newItem]);
+      case "proposed":
+        setProposedCosts([...proposedCosts, newItem]);
         break;
-      case "other":
-        setOtherCost([...otherCost, newItem]);
+      case "benefits":
+        setAdditionalBenefits([...additionalBenefits, newItem]);
         break;
     }
   };
 
-  const removeCostItem = (index: number, costType: "materials" | "labor" | "other") => {
+  const removeCostItem = (index: number, costType: "current" | "proposed" | "benefits") => {
     switch (costType) {
-      case "materials":
-        setMaterialsCost(materialsCost.filter((_, i) => i !== index));
+      case "current":
+        setCurrentCosts(currentCosts.filter((_, i: number) => i !== index));
         break;
-      case "labor":
-        setLaborCost(laborCost.filter((_, i) => i !== index));
+      case "proposed":
+        setProposedCosts(proposedCosts.filter((_, i: number) => i !== index));
         break;
-      case "other":
-        setOtherCost(otherCost.filter((_, i) => i !== index));
+      case "benefits":
+        setAdditionalBenefits(additionalBenefits.filter((_, i: number) => i !== index));
         break;
     }
   };
 
-  const totalMaterialsCost = calculateTotalCost(materialsCost);
-  const totalLaborCost = calculateTotalCost(laborCost);
-  const totalOtherCost = calculateTotalCost(otherCost);
-  const grandTotal = totalMaterialsCost + totalLaborCost + totalOtherCost;
+  const totalCurrentCosts = calculateTotalCost(currentCosts);
+  const totalProposedCosts = calculateTotalCost(proposedCosts);
+  const totalBenefits = calculateTotalCost(additionalBenefits);
+  const benefitCostRatio = totalProposedCosts > 0 ? totalBenefits / totalProposedCosts : 0;
 
   return (
     <>
@@ -502,35 +503,35 @@ const KivilcimForm: React.FC<KivilcimFormProps> = ({
             <Calculator className="h-5 w-5 text-gray-500" />
           </div>
           
-          <div className="space-y-4">
-            {/* Malzeme Maliyetleri */}
+          <div className="space-y-6">
+            {/* Mevcut Durumda İşletim Maliyeti */}
             <div>
-              <h4 className="font-medium mb-2">Malzeme Maliyetleri</h4>
+              <h4 className="font-medium mb-2">Mevcut Durumda İşletim Maliyeti (Mevcut Kayıplar)</h4>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[40%]">Açıklama</TableHead>
+                    <TableHead className="w-[40%]">Cins ve/veya Açıklama</TableHead>
                     <TableHead>Miktar</TableHead>
-                    <TableHead>Birim Fiyat (₺)</TableHead>
-                    <TableHead>Toplam (₺)</TableHead>
+                    <TableHead>Birim Tutar (₺)</TableHead>
+                    <TableHead>Tutar (₺)</TableHead>
                     <TableHead className="w-[50px]"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {materialsCost.map((item, index) => (
+                  {currentCosts.map((item, index) => (
                     <TableRow key={index}>
                       <TableCell>
                         <Input 
                           value={item.description} 
-                          onChange={(e) => updateCostItem(index, "description", e.target.value, "materials")}
-                          placeholder="Malzeme adı"
+                          onChange={(e) => updateCostItem(index, "description", e.target.value, "current")}
+                          placeholder="Açıklama"
                         />
                       </TableCell>
                       <TableCell>
                         <Input 
                           type="number" 
                           value={item.amount} 
-                          onChange={(e) => updateCostItem(index, "amount", e.target.value, "materials")}
+                          onChange={(e) => updateCostItem(index, "amount", e.target.value, "current")}
                           className="w-20"
                         />
                       </TableCell>
@@ -538,7 +539,7 @@ const KivilcimForm: React.FC<KivilcimFormProps> = ({
                         <Input 
                           type="number" 
                           value={item.unitPrice} 
-                          onChange={(e) => updateCostItem(index, "unitPrice", e.target.value, "materials")}
+                          onChange={(e) => updateCostItem(index, "unitPrice", e.target.value, "current")}
                           className="w-24"
                         />
                       </TableCell>
@@ -548,62 +549,64 @@ const KivilcimForm: React.FC<KivilcimFormProps> = ({
                           type="button"
                           variant="ghost"
                           size="sm"
-                          onClick={() => removeCostItem(index, "materials")}
-                          disabled={materialsCost.length === 1}
+                          onClick={() => removeCostItem(index, "current")}
+                          className="h-8 w-8 p-0"
                         >
                           <X className="h-4 w-4" />
                         </Button>
                       </TableCell>
                     </TableRow>
                   ))}
-                  <TableRow>
-                    <TableCell colSpan={3} className="text-right font-medium">
-                      Toplam Malzeme Maliyeti:
-                    </TableCell>
-                    <TableCell className="font-medium">{totalMaterialsCost.toFixed(2)} ₺</TableCell>
-                    <TableCell>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => addCostItem("materials")}
-                      >
-                        <PlusCircle className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
                 </TableBody>
+                <TableFooter>
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-right font-medium">Toplam:</TableCell>
+                    <TableCell className="font-medium">{totalCurrentCosts.toFixed(2)} ₺</TableCell>
+                    <TableCell></TableCell>
+                  </TableRow>
+                </TableFooter>
               </Table>
+              
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => addCostItem("current")}
+                className="mt-2"
+              >
+                <PlusCircle className="h-4 w-4 mr-2" />
+                Maliyet Kalemi Ekle
+              </Button>
             </div>
             
-            {/* İşçilik Maliyetleri */}
+            {/* Önerilen Durumda Yatırım ve İşletim Maliyeti */}
             <div>
-              <h4 className="font-medium mb-2">İşçilik Maliyetleri</h4>
+              <h4 className="font-medium mb-2">Önerilen Durumda Yatırım ve İşletim Maliyeti</h4>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[40%]">Açıklama</TableHead>
+                    <TableHead className="w-[40%]">Cins ve/veya Açıklama</TableHead>
                     <TableHead>Miktar</TableHead>
-                    <TableHead>Birim Fiyat (₺)</TableHead>
-                    <TableHead>Toplam (₺)</TableHead>
+                    <TableHead>Birim Tutar (₺)</TableHead>
+                    <TableHead>Tutar (₺)</TableHead>
                     <TableHead className="w-[50px]"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {laborCost.map((item, index) => (
+                  {proposedCosts.map((item, index) => (
                     <TableRow key={index}>
                       <TableCell>
                         <Input 
                           value={item.description} 
-                          onChange={(e) => updateCostItem(index, "description", e.target.value, "labor")}
-                          placeholder="İşçilik tipi"
+                          onChange={(e) => updateCostItem(index, "description", e.target.value, "proposed")}
+                          placeholder="Açıklama"
                         />
                       </TableCell>
                       <TableCell>
                         <Input 
                           type="number" 
                           value={item.amount} 
-                          onChange={(e) => updateCostItem(index, "amount", e.target.value, "labor")}
+                          onChange={(e) => updateCostItem(index, "amount", e.target.value, "proposed")}
                           className="w-20"
                         />
                       </TableCell>
@@ -611,7 +614,7 @@ const KivilcimForm: React.FC<KivilcimFormProps> = ({
                         <Input 
                           type="number" 
                           value={item.unitPrice} 
-                          onChange={(e) => updateCostItem(index, "unitPrice", e.target.value, "labor")}
+                          onChange={(e) => updateCostItem(index, "unitPrice", e.target.value, "proposed")}
                           className="w-24"
                         />
                       </TableCell>
@@ -621,62 +624,64 @@ const KivilcimForm: React.FC<KivilcimFormProps> = ({
                           type="button"
                           variant="ghost"
                           size="sm"
-                          onClick={() => removeCostItem(index, "labor")}
-                          disabled={laborCost.length === 1}
+                          onClick={() => removeCostItem(index, "proposed")}
+                          className="h-8 w-8 p-0"
                         >
                           <X className="h-4 w-4" />
                         </Button>
                       </TableCell>
                     </TableRow>
                   ))}
-                  <TableRow>
-                    <TableCell colSpan={3} className="text-right font-medium">
-                      Toplam İşçilik Maliyeti:
-                    </TableCell>
-                    <TableCell className="font-medium">{totalLaborCost.toFixed(2)} ₺</TableCell>
-                    <TableCell>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => addCostItem("labor")}
-                      >
-                        <PlusCircle className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
                 </TableBody>
+                <TableFooter>
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-right font-medium">Toplam:</TableCell>
+                    <TableCell className="font-medium">{totalProposedCosts.toFixed(2)} ₺</TableCell>
+                    <TableCell></TableCell>
+                  </TableRow>
+                </TableFooter>
               </Table>
+              
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => addCostItem("proposed")}
+                className="mt-2"
+              >
+                <PlusCircle className="h-4 w-4 mr-2" />
+                Maliyet Kalemi Ekle
+              </Button>
             </div>
             
-            {/* Diğer Maliyetler */}
+            {/* Önerinin Sağladığı Ek Faydalar */}
             <div>
-              <h4 className="font-medium mb-2">Diğer Maliyetler</h4>
+              <h4 className="font-medium mb-2">Önerinin Sağladığı Ek Faydalar</h4>
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[40%]">Açıklama</TableHead>
+                    <TableHead className="w-[40%]">Cins ve/veya Açıklama</TableHead>
                     <TableHead>Miktar</TableHead>
-                    <TableHead>Birim Fiyat (₺)</TableHead>
-                    <TableHead>Toplam (₺)</TableHead>
+                    <TableHead>Birim Tutar (₺)</TableHead>
+                    <TableHead>Tutar (₺)</TableHead>
                     <TableHead className="w-[50px]"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {otherCost.map((item, index) => (
+                  {additionalBenefits.map((item, index) => (
                     <TableRow key={index}>
                       <TableCell>
                         <Input 
                           value={item.description} 
-                          onChange={(e) => updateCostItem(index, "description", e.target.value, "other")}
-                          placeholder="Maliyet adı"
+                          onChange={(e) => updateCostItem(index, "description", e.target.value, "benefits")}
+                          placeholder="Fayda açıklaması"
                         />
                       </TableCell>
                       <TableCell>
                         <Input 
                           type="number" 
                           value={item.amount} 
-                          onChange={(e) => updateCostItem(index, "amount", e.target.value, "other")}
+                          onChange={(e) => updateCostItem(index, "amount", e.target.value, "benefits")}
                           className="w-20"
                         />
                       </TableCell>
@@ -684,7 +689,7 @@ const KivilcimForm: React.FC<KivilcimFormProps> = ({
                         <Input 
                           type="number" 
                           value={item.unitPrice} 
-                          onChange={(e) => updateCostItem(index, "unitPrice", e.target.value, "other")}
+                          onChange={(e) => updateCostItem(index, "unitPrice", e.target.value, "benefits")}
                           className="w-24"
                         />
                       </TableCell>
@@ -694,54 +699,64 @@ const KivilcimForm: React.FC<KivilcimFormProps> = ({
                           type="button"
                           variant="ghost"
                           size="sm"
-                          onClick={() => removeCostItem(index, "other")}
-                          disabled={otherCost.length === 1}
+                          onClick={() => removeCostItem(index, "benefits")}
+                          className="h-8 w-8 p-0"
                         >
                           <X className="h-4 w-4" />
                         </Button>
                       </TableCell>
                     </TableRow>
                   ))}
-                  <TableRow>
-                    <TableCell colSpan={3} className="text-right font-medium">
-                      Toplam Diğer Maliyetler:
-                    </TableCell>
-                    <TableCell className="font-medium">{totalOtherCost.toFixed(2)} ₺</TableCell>
-                    <TableCell>
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => addCostItem("other")}
-                      >
-                        <PlusCircle className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
                 </TableBody>
+                <TableFooter>
+                  <TableRow>
+                    <TableCell colSpan={3} className="text-right font-medium">Toplam:</TableCell>
+                    <TableCell className="font-medium">{totalBenefits.toFixed(2)} ₺</TableCell>
+                    <TableCell></TableCell>
+                  </TableRow>
+                </TableFooter>
               </Table>
+              
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => addCostItem("benefits")}
+                className="mt-2"
+              >
+                <PlusCircle className="h-4 w-4 mr-2" />
+                Fayda Kalemi Ekle
+              </Button>
             </div>
             
-            {/* Toplam Maliyet Özeti */}
+            {/* Fayda/Maliyet Oranı */}
             <div className="mt-6 bg-gray-50 p-4 rounded-md">
-              <h4 className="font-medium mb-3">Toplam Maliyet Özeti</h4>
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span>Toplam Malzeme Maliyeti:</span>
-                  <span>{totalMaterialsCost.toFixed(2)} ₺</span>
+              <h4 className="font-medium mb-3">Fayda/Maliyet Analizi</h4>
+              <div className="space-y-3">
+                <div className="flex justify-between items-center">
+                  <span>Mevcut Durum Maliyeti (Yıllık):</span>
+                  <span className="font-medium">{totalCurrentCosts.toFixed(2)} ₺</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Toplam İşçilik Maliyeti:</span>
-                  <span>{totalLaborCost.toFixed(2)} ₺</span>
+                <div className="flex justify-between items-center">
+                  <span>Önerilen Durum Maliyeti:</span>
+                  <span className="font-medium">{totalProposedCosts.toFixed(2)} ₺</span>
                 </div>
-                <div className="flex justify-between">
-                  <span>Toplam Diğer Maliyetler:</span>
-                  <span>{totalOtherCost.toFixed(2)} ₺</span>
+                <div className="flex justify-between items-center">
+                  <span>Ek Faydalar (Yıllık):</span>
+                  <span className="font-medium">{totalBenefits.toFixed(2)} ₺</span>
                 </div>
                 <Separator className="my-2" />
-                <div className="flex justify-between font-bold">
-                  <span>GENEL TOPLAM:</span>
-                  <span>{grandTotal.toFixed(2)} ₺</span>
+                <div className="flex justify-between items-center">
+                  <span>Net Fayda (Yıllık):</span>
+                  <span className="font-medium">{(totalCurrentCosts + totalBenefits - totalProposedCosts).toFixed(2)} ₺</span>
+                </div>
+                <div className="flex justify-between items-center font-bold">
+                  <span>F/M ORANI:</span>
+                  <span>
+                    {totalProposedCosts > 0 ? 
+                      ((totalCurrentCosts + totalBenefits) / totalProposedCosts).toFixed(2) : 
+                      "∞"}
+                  </span>
                 </div>
               </div>
             </div>
