@@ -1,30 +1,31 @@
-import TabNavigation from "@/components/TabNavigation";
-import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useToast } from "@/hooks/use-toast";
+import React, { useState, useEffect } from "react";
+import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { apiRequest } from "@/lib/queryClient";
-import { queryClient } from "@/lib/queryClient";
-import { 
-  extendedInsertSuggestionSchema, 
-  SUGGESTION_CATEGORIES, 
-  KAIZEN_TYPES,
-  IMPROVEMENT_TYPES,
-  User 
-} from "@shared/schema";
-import { z } from "zod";
-import React, { useState, useEffect, Suspense } from "react";
-import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
+import { KAIZEN_TYPES, IMPROVEMENT_TYPES, SUGGESTION_CATEGORIES, User, extendedInsertSuggestionSchema } from "@shared/schema";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useQuery } from "@tanstack/react-query";
+import { useToast } from "@/hooks/use-toast";
+import TabNavigation from "@/components/TabNavigation";
+import {
+  Card,
+  CardContent,
+} from "@/components/ui/card";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, PlusCircle, X, User as UserIcon, Sparkles, Zap, Calculator, Loader2 } from "lucide-react";
 import KivilcimForm from "@/components/KivilcimForm";
 
@@ -37,27 +38,29 @@ const formSchema = extendedInsertSuggestionSchema.omit({ submittedBy: true }).ex
   
   // Kıvılcım formu için ek alanlar
   internalConsultant: z.string().optional(),
+  isRevision: z.boolean().optional(),
   costCalculationDetails: z.object({
-    materials: z.array(z.object({
+    current: z.array(z.object({
       description: z.string(),
       amount: z.number(),
       unitPrice: z.number(),
       totalPrice: z.number()
     })).optional(),
-    labor: z.array(z.object({
+    proposed: z.array(z.object({
       description: z.string(),
       amount: z.number(),
       unitPrice: z.number(),
       totalPrice: z.number()
     })).optional(),
-    other: z.array(z.object({
+    benefits: z.array(z.object({
       description: z.string(),
       amount: z.number(),
       unitPrice: z.number(),
       totalPrice: z.number()
     })).optional()
   }).optional(),
-  preChecklistItems: z.array(z.boolean()).optional()
+  currentStateFiles: z.array(z.string()).optional(),
+  improvementFiles: z.array(z.string()).optional()
 });
 
 export default function CreateSuggestion() {
@@ -115,7 +118,7 @@ export default function CreateSuggestion() {
       teamMembers: [],
       currentStateFiles: [],
       improvementFiles: [],
-      companyContribution: ""
+      isRevision: false
     },
   });
   
@@ -453,10 +456,10 @@ export default function CreateSuggestion() {
                         name="projectLeader"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Proje Lideri (Kobetsu Kaizen için zorunlu)</FormLabel>
+                            <FormLabel>Proje Lideri</FormLabel>
                             <Select 
-                              onValueChange={(value) => field.onChange(parseInt(value))} 
-                              value={field.value?.toString()}
+                              onValueChange={field.onChange} 
+                              value={field.value || ""}
                             >
                               <FormControl>
                                 <SelectTrigger>
@@ -464,15 +467,15 @@ export default function CreateSuggestion() {
                                 </SelectTrigger>
                               </FormControl>
                               <SelectContent>
-                                {teamMembers.map((member) => (
-                                  <SelectItem key={member.id} value={member.id.toString()}>
-                                    {member.name}
+                                {usersData?.map(user => (
+                                  <SelectItem key={user.id} value={user.id.toString()}>
+                                    {user.displayName || user.username || `Kullanıcı-${user.id}`}
                                   </SelectItem>
                                 ))}
                               </SelectContent>
                             </Select>
                             <FormDescription>
-                              Proje lideri, ekip üyeleri arasından seçilmelidir.
+                              Kobetsu Kaizen için proje lideri seçin
                             </FormDescription>
                             <FormMessage />
                           </FormItem>
@@ -483,25 +486,21 @@ export default function CreateSuggestion() {
                 </CardContent>
               </Card>
             ) : (
-              <Suspense fallback={<div className="flex items-center justify-center py-10"><Loader2 className="h-6 w-6 animate-spin" /></div>}>
-                <KivilcimForm 
-                  form={form}
-                  currentUser={currentUser}
-                  currentStateFiles={currentStateFiles}
-                  setCurrentStateFiles={setCurrentStateFiles}
-                  improvementFiles={improvementFiles}
-                  setImprovementFiles={setImprovementFiles}
-                />
-              </Suspense>
+              <KivilcimForm 
+                form={form} 
+                currentUser={currentUser}
+                currentStateFiles={currentStateFiles}
+                setCurrentStateFiles={setCurrentStateFiles}
+                improvementFiles={improvementFiles}
+                setImprovementFiles={setImprovementFiles}
+              />
             )}
             
-            {/* Öneri Detayları - Sadece Kaizen formu için görünür */}
+            {/* 3. Bölüm: Öneri Detayları (Sadece Kaizen için) */}
             {selectedSuggestionType === "kaizen" && (
               <Card className="mb-4">
                 <CardContent className="pt-6">
-                  <h3 className="text-lg font-semibold mb-4">
-                    3. Kaizen Detayları
-                  </h3>
+                  <h3 className="text-lg font-semibold mb-4">3. Öneri Detayları</h3>
                   
                   <FormField
                     control={form.control}
@@ -513,7 +512,7 @@ export default function CreateSuggestion() {
                           <Textarea 
                             placeholder="Mevcut durumu detaylı olarak açıklayın" 
                             className="resize-none" 
-                            rows={5}
+                            rows={4}
                             {...field} 
                           />
                         </FormControl>
@@ -551,12 +550,13 @@ export default function CreateSuggestion() {
                       {currentStateFiles.length > 0 && (
                         <div className="mt-3 space-y-2">
                           {currentStateFiles.map((file, index) => (
-                            <div key={index} className="flex items-center justify-between bg-white p-2 rounded text-sm">
-                              <span className="truncate">{file}</span>
+                            <div key={index} className="flex items-center space-x-2 bg-white p-2 rounded text-left">
+                              <span className="truncate flex-1 text-xs">{file}</span>
                               <Button
                                 type="button"
                                 variant="ghost"
                                 size="sm"
+                                className="h-8 w-8 p-0"
                                 onClick={() => {
                                   const newFiles = [...currentStateFiles];
                                   newFiles.splice(index, 1);
@@ -573,34 +573,36 @@ export default function CreateSuggestion() {
                     </div>
                   </div>
                   
-                  <FormField
-                    control={form.control}
-                    name="benefits"
-                    render={({ field }) => (
-                      <FormItem className="mt-4">
-                        <FormLabel>İyileştirme Önerisi *</FormLabel>
-                        <FormControl>
-                          <Textarea 
-                            placeholder="Önerdiğiniz iyileştirmeyi açıklayın" 
-                            className="resize-none" 
-                            rows={3}
-                            {...field} 
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Önerdiğiniz çözümü, uygulama adımlarını ve beklenen sonuçları açıklayın.
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="mt-6">
+                    <FormField
+                      control={form.control}
+                      name="benefits"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Önerilen Çözüm ve Beklenen Faydalar *</FormLabel>
+                          <FormControl>
+                            <Textarea 
+                              placeholder="Önerdiğiniz çözümü ve sağlayacağı faydaları açıklayın" 
+                              className="resize-none" 
+                              rows={4}
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormDescription>
+                            Sunduğunuz çözümü ve sağlayacağı iyileştirmeleri detaylandırın.
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                   
                   <div className="mt-4">
-                    <FormLabel>İyileştirme Önerisi Dosyaları (İsteğe bağlı)</FormLabel>
+                    <FormLabel>İyileştirme Dosyaları (İsteğe bağlı)</FormLabel>
                     <div className="mt-2 p-4 border border-dashed rounded-md text-center bg-gray-50">
                       <Upload className="h-8 w-8 mx-auto text-gray-400 mb-2" />
                       <p className="text-sm text-gray-500">
-                        İyileştirme önerinizle ilgili çizim, şema veya dokümanları yükleyin
+                        Önerilen çözümle ilgili fotoğraf veya dokümanları yükleyin
                       </p>
                       <Button 
                         type="button" 
@@ -610,7 +612,7 @@ export default function CreateSuggestion() {
                         onClick={() => {
                           // Normalde dosya yükleme işlemi burada yapılır
                           // Örnek olarak dosya URL'si ekliyoruz
-                          const newFiles = [...improvementFiles, "example_improvement_" + Date.now() + ".jpg"];
+                          const newFiles = [...improvementFiles, "example_solution_" + Date.now() + ".jpg"];
                           setImprovementFiles(newFiles);
                           form.setValue("improvementFiles", newFiles);
                         }}
@@ -621,12 +623,13 @@ export default function CreateSuggestion() {
                       {improvementFiles.length > 0 && (
                         <div className="mt-3 space-y-2">
                           {improvementFiles.map((file, index) => (
-                            <div key={index} className="flex items-center justify-between bg-white p-2 rounded text-sm">
-                              <span className="truncate">{file}</span>
+                            <div key={index} className="flex items-center space-x-2 bg-white p-2 rounded text-left">
+                              <span className="truncate flex-1 text-xs">{file}</span>
                               <Button
                                 type="button"
                                 variant="ghost"
                                 size="sm"
+                                className="h-8 w-8 p-0"
                                 onClick={() => {
                                   const newFiles = [...improvementFiles];
                                   newFiles.splice(index, 1);
@@ -645,37 +648,6 @@ export default function CreateSuggestion() {
                 </CardContent>
               </Card>
             )}
-            
-            {/* Şirkete Katkısı */}
-            <Card className="mb-4">
-              <CardContent className="pt-6">
-                <h3 className="text-lg font-semibold mb-4">
-                  {selectedSuggestionType === "kaizen" ? "4. Şirkete Katkısı" : "3. Şirkete Katkısı"}
-                </h3>
-                
-                <FormField
-                  control={form.control}
-                  name="companyContribution"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Şirkete Katkısı *</FormLabel>
-                      <FormControl>
-                        <Textarea 
-                          placeholder="Bu önerinin şirkete sağlayacağı katkıları açıklayın" 
-                          className="resize-none" 
-                          rows={3}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormDescription>
-                        Maliyet tasarrufu, verimlilik artışı, kalite iyileştirmesi gibi ölçülebilir katkıları belirtin.
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </CardContent>
-            </Card>
             
             <div className="flex justify-end gap-4">
               <Button 
