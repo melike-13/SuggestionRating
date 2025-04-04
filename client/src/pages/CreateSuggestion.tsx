@@ -250,35 +250,7 @@ export default function CreateSuggestion() {
                   />
                 </div>
                 
-                <FormField
-                  control={form.control}
-                  name="category"
-                  render={({ field }) => (
-                    <FormItem className="mt-4">
-                      <FormLabel>Kategori *</FormLabel>
-                      <Select 
-                        onValueChange={field.onChange} 
-                        value={field.value || ""}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Kategori seçin" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value={SUGGESTION_CATEGORIES.PRODUCTION}>Üretim Verimliliği</SelectItem>
-                          <SelectItem value={SUGGESTION_CATEGORIES.QUALITY}>Kalite İyileştirme</SelectItem>
-                          <SelectItem value={SUGGESTION_CATEGORIES.SAFETY}>İş Güvenliği</SelectItem>
-                          <SelectItem value={SUGGESTION_CATEGORIES.ENVIRONMENT}>Çevre ve Sürdürülebilirlik</SelectItem>
-                          <SelectItem value={SUGGESTION_CATEGORIES.COST}>Maliyet Azaltma</SelectItem>
-                          <SelectItem value={SUGGESTION_CATEGORIES.WORKPLACE}>İş Yeri Düzeni</SelectItem>
-                          <SelectItem value={SUGGESTION_CATEGORIES.OTHER}>Diğer</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
+                {/* Kategori alanı kaldırıldı */}
               </CardContent>
             </Card>
             
