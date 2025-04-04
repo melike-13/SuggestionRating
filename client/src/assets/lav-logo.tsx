@@ -44,19 +44,19 @@ export const LavLogo: React.FC<LogoProps> = ({
         fill={colors.text} 
       />
       
-      {/* A harfinin pembe/fuşya üst kısmı */}
+      {/* A harfi - sadece bir tane ve üstü pembe/fuşya */}
       <path 
-        d="M180 190L230 30L280 190" 
-        stroke={colors.accent} 
+        d="M230 190L280 30L330 190" 
+        stroke={colors.text} 
         strokeWidth="40" 
         strokeLinecap="round" 
         strokeLinejoin="round" 
       />
       
-      {/* A harfinin alt kısmı */}
+      {/* A harfinin üst çizgisi - pembe/fuşya accent */}
       <path 
-        d="M280 190L330 30L380 190" 
-        stroke={colors.text} 
+        d="M270 60L290 10" 
+        stroke={colors.accent} 
         strokeWidth="40" 
         strokeLinecap="round" 
         strokeLinejoin="round" 
@@ -64,7 +64,7 @@ export const LavLogo: React.FC<LogoProps> = ({
       
       {/* A harfinin yatay çizgisi */}
       <path 
-        d="M205 120H355" 
+        d="M250 120H310" 
         stroke={colors.text} 
         strokeWidth="15" 
         strokeLinecap="round" 
