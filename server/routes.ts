@@ -1,6 +1,7 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { pool } from "./db";
 import session from "express-session";
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
@@ -229,26 +230,94 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Status kontrolü kaldırıldı - önerinin değerlendirilmesine her durumda izin ver
       
-      // Gelen değerlerin sayı olduğundan emin olalım
+      // Veritabanı puanları integer olarak bekliyor. Ondalıklı puanları yuvarlayarak integer'a çevirelim.
+      const safeRound = (value: any): number => {
+        if (value === undefined || value === null) {
+          return 0;
+        }
+        // Önce sayıya çevir, sonra en yakın tam sayıya yuvarla
+        const num = typeof value === 'number' ? value : parseFloat(String(value));
+        return Number.isNaN(num) ? 0 : Math.round(num);
+      }
+      
+      console.log("Gelen puan değerleri:");
+      console.log("feasibilityScore (ham):", req.body.feasibilityScore, "tip:", typeof req.body.feasibilityScore);
+      
+      // Bu aşamada tüm sayısal değerleri yuvarlayarak tam sayıya çeviriyoruz
       const updates = {
-        feasibilityScore: typeof req.body.feasibilityScore === 'number' ? req.body.feasibilityScore : Number(req.body.feasibilityScore),
+        feasibilityScore: safeRound(req.body.feasibilityScore),
         feasibilityFeedback: req.body.feasibilityFeedback,
         status: req.body.status,
         feasibilityReviewedBy: (req.user as any).id,
         feasibilityReviewedAt: new Date(),
         
-        // Puan alanlarının veri dönüşümlerini yaparak sayısal olduğundan emin olalım
-        innovationScore: typeof req.body.innovationScore === 'number' ? req.body.innovationScore : Number(req.body.innovationScore),
-        safetyScore: typeof req.body.safetyScore === 'number' ? req.body.safetyScore : Number(req.body.safetyScore),
-        environmentScore: typeof req.body.environmentScore === 'number' ? req.body.environmentScore : Number(req.body.environmentScore),
-        employeeSatisfactionScore: typeof req.body.employeeSatisfactionScore === 'number' ? req.body.employeeSatisfactionScore : Number(req.body.employeeSatisfactionScore),
-        technologicalCompatibilityScore: typeof req.body.technologicalCompatibilityScore === 'number' ? req.body.technologicalCompatibilityScore : Number(req.body.technologicalCompatibilityScore),
-        implementationEaseScore: typeof req.body.implementationEaseScore === 'number' ? req.body.implementationEaseScore : Number(req.body.implementationEaseScore),
-        costBenefitScore: typeof req.body.costBenefitScore === 'number' ? req.body.costBenefitScore : Number(req.body.costBenefitScore),
+        // Tüm puan alanlarını yuvarlayarak integer'a çeviriyoruz
+        innovationScore: safeRound(req.body.innovationScore),
+        safetyScore: safeRound(req.body.safetyScore),
+        environmentScore: safeRound(req.body.environmentScore),
+        employeeSatisfactionScore: safeRound(req.body.employeeSatisfactionScore),
+        technologicalCompatibilityScore: safeRound(req.body.technologicalCompatibilityScore),
+        implementationEaseScore: safeRound(req.body.implementationEaseScore),
+        costBenefitScore: safeRound(req.body.costBenefitScore),
       };
       
-      const updatedSuggestion = await storage.updateSuggestion(id, updates);
-      res.json(updatedSuggestion);
+      console.log("Veritabanına gönderilen puan değerleri:");
+      console.log("feasibilityScore (işlenmiş):", updates.feasibilityScore);
+      console.log("innovationScore:", updates.innovationScore);
+      console.log("safetyScore:", updates.safetyScore);
+      console.log("environmentScore:", updates.environmentScore);
+      
+      // Direkt SQL ile güncelleme yapalım
+      const client = await pool.connect();
+      try {
+        await client.query('BEGIN');
+        
+        // SQL sorgusunu elle oluşturalım ve parametreleri tam sayı olarak geçirelim
+        const sql = `
+          UPDATE suggestions 
+          SET 
+            feasibility_score = $1,
+            feasibility_feedback = $2,
+            status = $3,
+            feasibility_reviewed_by = $4,
+            feasibility_reviewed_at = $5,
+            innovation_score = $6, 
+            safety_score = $7,
+            environment_score = $8,
+            employee_satisfaction_score = $9,
+            technological_compatibility_score = $10,
+            implementation_ease_score = $11,
+            cost_benefit_score = $12
+          WHERE id = $13
+          RETURNING *
+        `;
+        
+        const result = await client.query(sql, [
+          updates.feasibilityScore,
+          updates.feasibilityFeedback,
+          updates.status,
+          updates.feasibilityReviewedBy,
+          updates.feasibilityReviewedAt,
+          updates.innovationScore,
+          updates.safetyScore,
+          updates.environmentScore,
+          updates.employeeSatisfactionScore,
+          updates.technologicalCompatibilityScore,
+          updates.implementationEaseScore,
+          updates.costBenefitScore,
+          id
+        ]);
+        
+        await client.query('COMMIT');
+        
+        const updatedSuggestion = result.rows[0];
+        res.json(updatedSuggestion);
+      } catch (error) {
+        await client.query('ROLLBACK');
+        throw error;
+      } finally {
+        client.release();
+      }
     } catch (err: any) {
       console.error("Yapılabilirlik değerlendirme hatası:", err);
       res.status(500).json({ message: err.message });
