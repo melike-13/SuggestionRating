@@ -1,4 +1,4 @@
-import { pgTable, text, serial, integer, boolean, timestamp } from "drizzle-orm/pg-core";
+import { pgTable, text, serial, integer, boolean, timestamp, varchar, json } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
@@ -26,8 +26,55 @@ export const suggestions = pgTable("suggestions", {
   category: text("category").notNull(),
   benefits: text("benefits").notNull(),
   status: text("status").notNull().default("new"),
+  
+  // Başvuru bilgileri
   submittedBy: integer("submitted_by").notNull(),
   submittedAt: timestamp("submitted_at").notNull().defaultNow(),
+  
+  // Bölüm müdürü incelemesi
+  departmentManagerId: integer("department_manager_id"),
+  departmentReviewAt: timestamp("department_review_at"),
+  departmentFeedback: text("department_feedback"),
+  
+  // Yapılabilirlik değerlendirmesi
+  feasibilityScore: integer("feasibility_score"), // 2.5 üstünde olmalı
+  feasibilityFeedback: text("feasibility_feedback"),
+  feasibilityReviewedBy: integer("feasibility_reviewed_by"),
+  feasibilityReviewedAt: timestamp("feasibility_reviewed_at"),
+  
+  // Çözüm önerisi
+  solutionDescription: text("solution_description"),
+  solutionProposedBy: integer("solution_proposed_by"),
+  solutionProposedAt: timestamp("solution_proposed_at"),
+  
+  // Maliyet değerlendirmesi
+  costScore: integer("cost_score"), // 3 üstünde olmalı
+  costDetails: text("cost_details"),
+  costReviewedBy: integer("cost_reviewed_by"),
+  costReviewedAt: timestamp("cost_reviewed_at"),
+  
+  // Genel Müdür onayı
+  executiveReviewedBy: integer("executive_reviewed_by"),
+  executiveReviewedAt: timestamp("executive_reviewed_at"),
+  executiveFeedback: text("executive_feedback"),
+  
+  // Uygulama ve takip
+  implementationStartedAt: timestamp("implementation_started_at"),
+  implementationCompletedAt: timestamp("implementation_completed_at"),
+  implementationNotes: text("implementation_notes"),
+  
+  // Raporlama
+  reportedAt: timestamp("reported_at"),
+  reportDetails: text("report_details"),
+  reportedBy: integer("reported_by"),
+  
+  // Değerlendirme
+  evaluationScore: integer("evaluation_score"),
+  evaluationNotes: text("evaluation_notes"),
+  evaluatedBy: integer("evaluated_by"),
+  evaluatedAt: timestamp("evaluated_at"),
+  
+  // Eski alanlar (geriye uyumluluk için)
   rating: integer("rating"),
   feedback: text("feedback"),
   reviewedBy: integer("reviewed_by"),
@@ -38,6 +85,51 @@ export const insertSuggestionSchema = createInsertSchema(suggestions).omit({
   id: true,
   status: true,
   submittedAt: true,
+  
+  // Bölüm müdürü incelemesi
+  departmentManagerId: true,
+  departmentReviewAt: true,
+  departmentFeedback: true,
+  
+  // Yapılabilirlik değerlendirmesi
+  feasibilityScore: true,
+  feasibilityFeedback: true,
+  feasibilityReviewedBy: true,
+  feasibilityReviewedAt: true,
+  
+  // Çözüm önerisi
+  solutionDescription: true,
+  solutionProposedBy: true,
+  solutionProposedAt: true,
+  
+  // Maliyet değerlendirmesi
+  costScore: true,
+  costDetails: true,
+  costReviewedBy: true,
+  costReviewedAt: true,
+  
+  // Genel Müdür onayı
+  executiveReviewedBy: true,
+  executiveReviewedAt: true,
+  executiveFeedback: true,
+  
+  // Uygulama ve takip
+  implementationStartedAt: true,
+  implementationCompletedAt: true,
+  implementationNotes: true,
+  
+  // Raporlama
+  reportedAt: true,
+  reportDetails: true,
+  reportedBy: true,
+  
+  // Değerlendirme
+  evaluationScore: true,
+  evaluationNotes: true,
+  evaluatedBy: true,
+  evaluatedAt: true,
+  
+  // Eski alanlar
   rating: true,
   feedback: true,
   reviewedBy: true,
@@ -71,11 +163,21 @@ export type InsertReward = z.infer<typeof insertRewardSchema>;
 
 // Status and Category Constants
 export const SUGGESTION_STATUSES = {
-  NEW: "new",
-  REVIEW: "review",
-  APPROVED: "approved",
-  IMPLEMENTED: "implemented",
-  REJECTED: "rejected",
+  NEW: "new", // İlk giriş (Kaizen Formu)
+  DEPARTMENT_REVIEW: "department_review", // Bölüm Müdürü incelemesinde
+  FEASIBILITY_ASSESSMENT: "feasibility_assessment", // Yapılabilirlik değerlendirmesinde
+  FEASIBILITY_REJECTED: "feasibility_rejected", // Yapılabilirlik puanı düşük (< 2.5)
+  SOLUTION_IDENTIFIED: "solution_identified", // Çözüm önerisi belirlenmiş
+  COST_ASSESSMENT: "cost_assessment", // Maliyet değerlendirmesinde
+  COST_REJECTED: "cost_rejected", // Maliyet puanı düşük (< 3)
+  EXECUTIVE_REVIEW: "executive_review", // Genel Müdür incelemesinde
+  APPROVED: "approved", // Onaylanmış
+  REJECTED: "rejected", // Reddedilmiş
+  IN_PROGRESS: "in_progress", // Uygulama aşamasında
+  COMPLETED: "completed", // Uygulama tamamlandı
+  REPORTED: "reported", // Raporlandı
+  EVALUATED: "evaluated", // Değerlendirildi
+  REWARDED: "rewarded" // Ödüllendirildi
 } as const;
 
 export const SUGGESTION_CATEGORIES = {
@@ -113,4 +215,11 @@ export const extendedInsertSuggestionSchema = insertSuggestionSchema.extend({
 export const extendedInsertRewardSchema = insertRewardSchema.extend({
   amount: z.number().positive("Ödül miktarı pozitif olmalıdır"),
   type: z.enum([REWARD_TYPES.MONEY, REWARD_TYPES.POINTS, REWARD_TYPES.GIFT]),
+});
+
+// Session tablosu - Express-session için gerekli
+export const session = pgTable("session", {
+  sid: varchar("sid").primaryKey(),
+  sess: json("sess").notNull(),
+  expire: timestamp("expire", { precision: 6 }).notNull(),
 });

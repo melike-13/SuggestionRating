@@ -193,11 +193,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const reward = await storage.createReward(validatedData);
       
-      // Update suggestion status to implemented if not already
+      // Update suggestion status to COMPLETED if not already
       const suggestion = await storage.getSuggestion(reward.suggestionId);
-      if (suggestion && suggestion.status !== SUGGESTION_STATUSES.IMPLEMENTED) {
+      if (suggestion && suggestion.status !== SUGGESTION_STATUSES.COMPLETED) {
         await storage.updateSuggestion(suggestion.id, {
-          status: SUGGESTION_STATUSES.IMPLEMENTED,
+          status: SUGGESTION_STATUSES.COMPLETED,
           reviewedBy: (req.user as any).id,
           reviewedAt: new Date()
         });
