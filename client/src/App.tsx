@@ -5,6 +5,7 @@ import Dashboard from "@/pages/Dashboard";
 import SuggestionsList from "@/pages/SuggestionsList";
 import CreateSuggestion from "@/pages/CreateSuggestion";
 import AdminPanel from "@/pages/AdminPanel";
+import UserAdmin from "@/pages/UserAdmin";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useState, useEffect } from "react";
@@ -47,6 +48,22 @@ function App() {
             component={() => {
               if (user?.isAdmin) {
                 return <AdminPanel />;
+              } else {
+                // Admin olmayan kullanıcılar için yönlendirme
+                setTimeout(() => setLocation("/"), 0);
+                return (
+                  <div>
+                    Yetkisiz erişim, ana sayfaya yönlendiriliyorsunuz...
+                  </div>
+                );
+              }
+            }}
+          />
+          <Route
+            path="/users"
+            component={() => {
+              if (user?.isAdmin) {
+                return <UserAdmin />;
               } else {
                 // Admin olmayan kullanıcılar için yönlendirme
                 setTimeout(() => setLocation("/"), 0);

@@ -6,6 +6,7 @@ import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
 import { 
   insertSuggestionSchema, 
+  insertUserSchema,
   extendedInsertSuggestionSchema, 
   extendedInsertRewardSchema, 
   SUGGESTION_STATUSES,
@@ -343,6 +344,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(users);
     } catch (err: any) {
       res.status(500).json({ message: err.message });
+    }
+  });
+  
+  // Yeni kullanıcı oluşturma
+  app.post("/api/users", isAdmin, async (req, res) => {
+    try {
+      const validatedData = insertUserSchema.parse(req.body);
+      
+      // Kullanıcı adının benzersiz olduğunu kontrol et
+      const existingUser = await storage.getUserByUsername(validatedData.username);
+      if (existingUser) {
+        return res.status(400).json({ message: "Bu kullanıcı adı zaten kullanılıyor." });
+      }
+      
+      const user = await storage.createUser(validatedData);
+      res.status(201).json(user);
+    } catch (err: any) {
+      if (err.name === "ZodError") {
+        const validationError = fromZodError(err);
+        res.status(400).json({ message: validationError.message });
+      } else {
+        res.status(500).json({ message: err.message });
+      }
     }
   });
 

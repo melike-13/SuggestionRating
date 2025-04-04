@@ -26,7 +26,8 @@ export const insertUserSchema = createInsertSchema(users).pick({
 export const USER_ROLES = {
   EMPLOYEE: "employee",
   MANAGER: "manager",
-  EXECUTIVE: "executive"
+  EXECUTIVE: "executive",
+  ADMIN: "executive" // Yönetici (Genel Müdür) rolü için
 };
 
 // Kaizen türleri
