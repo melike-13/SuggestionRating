@@ -132,6 +132,11 @@ export class DatabaseStorage implements IStorage {
       submittedAt: now,
     };
     
+    // JSON alanlar için null/undefined kontrolü
+    if (!suggestionData.teamMembers) suggestionData.teamMembers = [];
+    if (!suggestionData.currentStateFiles) suggestionData.currentStateFiles = [];
+    if (!suggestionData.improvementFiles) suggestionData.improvementFiles = [];
+    
     const [suggestion] = await db.insert(suggestions).values(suggestionData).returning();
     return suggestion;
   }
@@ -139,6 +144,11 @@ export class DatabaseStorage implements IStorage {
   async updateSuggestion(id: number, updates: Partial<Suggestion>): Promise<Suggestion | undefined> {
     // Tarih alanlarını otomatik olarak kontrol et ve gerekirse dönüştür
     const processedUpdates = { ...updates };
+    
+    // JSON alanlar için null/undefined kontrolü
+    if (processedUpdates.teamMembers === null) processedUpdates.teamMembers = [];
+    if (processedUpdates.currentStateFiles === null) processedUpdates.currentStateFiles = [];
+    if (processedUpdates.improvementFiles === null) processedUpdates.improvementFiles = [];
     
     // Tarih alanlarını kontrol et ve gerekirse düzelt
     Object.keys(processedUpdates).forEach(key => {

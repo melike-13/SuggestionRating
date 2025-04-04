@@ -29,6 +29,26 @@ export const USER_ROLES = {
   EXECUTIVE: "executive"
 };
 
+// Kaizen türleri
+export const KAIZEN_TYPES = {
+  BEFORE_AFTER: "before_after", // Önce-Sonra Kaizen
+  KOBETSU: "kobetsu", // Kobetsu Kaizen
+} as const;
+
+// İyileştirme türleri
+export const IMPROVEMENT_TYPES = {
+  ISG: "isg", // İş Sağlığı ve Güvenliği
+  ENVIRONMENT: "environment", // Çevre
+  QUALITY: "quality", // Kalite
+  PRODUCTION: "production", // Üretim
+  COST: "cost", // Maliyet
+  COMPETENCE: "competence", // Yetkinlik
+  SUSTAINABILITY: "sustainability", // Sürdürülebilirlik
+  FIVE_S: "5s", // 5S
+  EFFICIENCY: "efficiency", // Verimlilik
+  OTHER: "other", // Diğer
+} as const;
+
 // Kaizen suggestions table
 export const suggestions = pgTable("suggestions", {
   id: serial("id").primaryKey(),
@@ -37,6 +57,24 @@ export const suggestions = pgTable("suggestions", {
   category: text("category").notNull(),
   benefits: text("benefits").notNull(),
   status: text("status").notNull().default("new"),
+  
+  // Kaizen türü ve iyileştirme türü
+  kaizenType: text("kaizen_type").notNull().default(KAIZEN_TYPES.BEFORE_AFTER),
+  improvementType: text("improvement_type").notNull().default(IMPROVEMENT_TYPES.QUALITY),
+  
+  // Uygulanacak departman
+  targetDepartment: text("target_department"),
+  
+  // Ekip üyeleri ve proje lideri - JSON olarak saklanacak
+  teamMembers: json("team_members").$type<{id: number, name: string}[]>().default([]),
+  projectLeader: integer("project_leader"),
+  
+  // Dosya yükleme alanları için URL'ler - JSON olarak saklanacak
+  currentStateFiles: json("current_state_files").$type<string[]>().default([]),
+  improvementFiles: json("improvement_files").$type<string[]>().default([]),
+  
+  // Şirkete katkısı
+  companyContribution: text("company_contribution"),
   
   // Başvuru bilgileri
   submittedBy: integer("submitted_by").notNull(),
@@ -212,6 +250,8 @@ export const extendedInsertSuggestionSchema = insertSuggestionSchema.extend({
   title: z.string().min(5, "Başlık en az 5 karakter olmalıdır").max(100, "Başlık en fazla 100 karakter olmalıdır"),
   description: z.string().min(10, "Açıklama en az 10 karakter olmalıdır"),
   benefits: z.string().min(10, "Beklenen faydalar en az 10 karakter olmalıdır"),
+  
+  // Kategori
   category: z.enum([
     SUGGESTION_CATEGORIES.PRODUCTION,
     SUGGESTION_CATEGORIES.QUALITY,
@@ -221,6 +261,54 @@ export const extendedInsertSuggestionSchema = insertSuggestionSchema.extend({
     SUGGESTION_CATEGORIES.WORKPLACE,
     SUGGESTION_CATEGORIES.OTHER
   ]),
+  
+  // Kaizen türü
+  kaizenType: z.enum([
+    KAIZEN_TYPES.BEFORE_AFTER,
+    KAIZEN_TYPES.KOBETSU
+  ]),
+  
+  // İyileştirme türü
+  improvementType: z.enum([
+    IMPROVEMENT_TYPES.ISG,
+    IMPROVEMENT_TYPES.ENVIRONMENT,
+    IMPROVEMENT_TYPES.QUALITY,
+    IMPROVEMENT_TYPES.PRODUCTION,
+    IMPROVEMENT_TYPES.COST,
+    IMPROVEMENT_TYPES.COMPETENCE,
+    IMPROVEMENT_TYPES.SUSTAINABILITY,
+    IMPROVEMENT_TYPES.FIVE_S,
+    IMPROVEMENT_TYPES.EFFICIENCY,
+    IMPROVEMENT_TYPES.OTHER
+  ]),
+  
+  // Kobetsu Kaizen için proje lideri zorunlu
+  projectLeader: z.number().optional().refine(
+    (val) => {
+      // Eğer veri yoksa validation'dan geçsin
+      if (val === undefined || val === null) return true;
+      // Sayı olarak geçerli bir ID ise geçsin
+      return Number.isInteger(val) && val > 0;
+    }, 
+    {
+      message: "Proje lideri geçerli bir kullanıcı ID'si olmalıdır"
+    }
+  ),
+  
+  // Dosya yükleme alanları opsiyonel
+  currentStateFiles: z.array(z.string()).optional(),
+  improvementFiles: z.array(z.string()).optional(),
+  
+  // Ekip üyeleri maksimum 4 kişi olabilir
+  teamMembers: z.array(
+    z.object({
+      id: z.number(),
+      name: z.string()
+    })
+  ).max(4, "Ekip en fazla 4 kişiden oluşabilir").optional(),
+  
+  // Şirkete katkısı
+  companyContribution: z.string().min(10, "Şirkete katkı açıklaması en az 10 karakter olmalıdır").optional(),
 });
 
 export const extendedInsertRewardSchema = insertRewardSchema.extend({
