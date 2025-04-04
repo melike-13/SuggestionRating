@@ -11,6 +11,7 @@ export const users = pgTable("users", {
   role: text("role").notNull().default("employee"), // "employee", "manager", "executive" değerleri alabilir
   department: text("department"), // kullanıcının bölümü (opsiyonel)
   isAdmin: boolean("is_admin").notNull().default(false),
+  email: text("email"), // E-posta bildirimleri için
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -20,6 +21,7 @@ export const insertUserSchema = createInsertSchema(users).pick({
   role: true,
   department: true,
   isAdmin: true,
+  email: true,
 });
 
 // Kullanıcı rolleri

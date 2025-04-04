@@ -13,6 +13,7 @@ import {
   SUGGESTION_STATUSES,
   USER_ROLES
 } from "@shared/schema";
+import { sendStatusChangeNotification, sendNewSuggestionNotification, sendRewardNotification } from "./notifications";
 import { fromZodError } from "zod-validation-error";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -125,6 +126,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       const suggestion = await storage.createSuggestion(validatedData);
+      
+      // Yeni öneri bildirimi gönder
+      sendNewSuggestionNotification(suggestion);
+      
       res.status(201).json(suggestion);
     } catch (err: any) {
       if (err.name === "ZodError") {
@@ -209,6 +214,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
             updates.executiveReviewedAt = new Date();
             break;
         }
+        
+        // Durum değişikliği bildirimi gönder
+        sendStatusChangeNotification({
+          ...suggestion,
+          status: updates.status
+        }, suggestion.status, req.user);
       }
       
       const updatedSuggestion = await storage.updateSuggestion(id, updates);
@@ -311,6 +322,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await client.query('COMMIT');
         
         const updatedSuggestion = result.rows[0];
+        
+        // Yapılabilirlik değerlendirmesi sonrası durum değişimi bildirimi
+        if (updates.status && updates.status !== suggestion.status) {
+          sendStatusChangeNotification(updatedSuggestion, suggestion.status, req.user);
+        }
+        
         res.json(updatedSuggestion);
       } catch (error) {
         await client.query('ROLLBACK');
@@ -362,6 +379,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
           executiveReviewedBy: (req.user as any).id,
           executiveReviewedAt: new Date()
         });
+      }
+      
+      // Ödül verildiğinde bildirim gönder
+      if (suggestion) {
+        sendRewardNotification(
+          suggestion.id,
+          suggestion.submittedBy,
+          reward.amount.toString(),
+          reward.type
+        );
       }
       
       res.status(201).json(reward);
