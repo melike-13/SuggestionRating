@@ -449,38 +449,13 @@ export default function SuggestionDetailModal({
             <div className="border rounded-lg shadow-sm p-4">
               <h3 className="font-medium text-lg mb-3">İş Akışı Durumu: {getStatusLabel(suggestion.status)}</h3>
               
-              {isAdmin && (
-                <div className="mt-2 mb-4">
-                  <div className="mb-2">
-                    <Label>Durum Değiştir</Label>
-                    <Select 
-                      value={status} 
-                      onValueChange={setStatus}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Durum seçin" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={SUGGESTION_STATUSES.NEW}>Yeni</SelectItem>
-                        <SelectItem value={SUGGESTION_STATUSES.DEPARTMENT_REVIEW}>Bölüm Müdürü İncelemesi</SelectItem>
-                        <SelectItem value={SUGGESTION_STATUSES.FEASIBILITY_ASSESSMENT}>Yapılabilirlik Değerlendirmesi</SelectItem>
-                        <SelectItem value={SUGGESTION_STATUSES.FEASIBILITY_REJECTED}>Yapılabilirlik Reddedildi</SelectItem>
-                        <SelectItem value={SUGGESTION_STATUSES.SOLUTION_IDENTIFIED}>Çözüm Önerisi Belirlendi</SelectItem>
-                        <SelectItem value={SUGGESTION_STATUSES.COST_ASSESSMENT}>Maliyet Değerlendirmesi</SelectItem>
-                        <SelectItem value={SUGGESTION_STATUSES.COST_REJECTED}>Maliyet Puanı Düşük</SelectItem>
-                        <SelectItem value={SUGGESTION_STATUSES.EXECUTIVE_REVIEW}>Genel Müdür İncelemesi</SelectItem>
-                        <SelectItem value={SUGGESTION_STATUSES.APPROVED}>Onaylandı</SelectItem>
-                        <SelectItem value={SUGGESTION_STATUSES.REJECTED}>Reddedildi</SelectItem>
-                        <SelectItem value={SUGGESTION_STATUSES.IN_PROGRESS}>Uygulamada</SelectItem>
-                        <SelectItem value={SUGGESTION_STATUSES.COMPLETED}>Tamamlandı</SelectItem>
-                        <SelectItem value={SUGGESTION_STATUSES.REPORTED}>Raporlandı</SelectItem>
-                        <SelectItem value={SUGGESTION_STATUSES.EVALUATED}>Değerlendirildi</SelectItem>
-                        <SelectItem value={SUGGESTION_STATUSES.REWARDED}>Ödüllendirildi</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              )}
+              <div className="mt-2 mb-4">
+                <p className="text-sm text-muted-foreground">
+                  Bu öneri şu anda <span className={`px-2.5 py-0.5 rounded-full text-white ${getStatusClass(suggestion.status)}`}>
+                    {getStatusLabel(suggestion.status)}
+                  </span> durumunda ve ilgili değerlendirme aşamasında işlem görmeyi bekliyor.
+                </p>
+              </div>
               
               <div className="space-y-6 mt-4">
                 {/* Her durum için gereken işlem formunu göster */}
