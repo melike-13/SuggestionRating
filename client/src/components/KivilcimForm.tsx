@@ -43,6 +43,9 @@ const KivilcimForm: React.FC<KivilcimFormProps> = ({
   improvementFiles,
   setImprovementFiles
 }) => {
+  // Revizyon modunu kontrol et
+  const [isRevision, setIsRevision] = useState(false);
+
   // Maliyet hesaplaması için state'ler
   const [currentCosts, setCurrentCosts] = useState<CostItem[]>([{ description: "", amount: 0, unitPrice: 0, totalPrice: 0 }]);
   const [proposedCosts, setProposedCosts] = useState<CostItem[]>([{ description: "", amount: 0, unitPrice: 0, totalPrice: 0 }]);
@@ -142,8 +145,68 @@ const KivilcimForm: React.FC<KivilcimFormProps> = ({
   const totalBenefits = calculateTotalCost(additionalBenefits);
   const benefitCostRatio = totalProposedCosts > 0 ? totalBenefits / totalProposedCosts : 0;
 
+  // Revizyon durumunu form state'ine ekle
+  React.useEffect(() => {
+    // isRevision değeri değiştiğinde, formdaki isRevision değerini güncelle
+    form.setValue("isRevision", isRevision);
+    
+    // Eğer revizyon modu aktifse, maliyet hesaplama kısmını temizle
+    if (isRevision) {
+      setCurrentCosts([{ description: "", amount: 0, unitPrice: 0, totalPrice: 0 }]);
+      setProposedCosts([{ description: "", amount: 0, unitPrice: 0, totalPrice: 0 }]);
+      setAdditionalBenefits([{ description: "", amount: 0, unitPrice: 0, totalPrice: 0 }]);
+      
+      form.setValue("costCalculationDetails", {
+        current: [],
+        proposed: [],
+        benefits: []
+      });
+    }
+  }, [isRevision, form]);
+
   return (
     <>
+      {/* Öneri Revizyon Seçeneği - Formun en üstünde */}
+      <Card className="mb-4 border-blue-200 bg-blue-50">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold">Öneri Revizyon Seçeneği</h3>
+          </div>
+          
+          <div className="p-4 rounded-md mb-4">
+            <p className="text-sm text-blue-700">
+              Eğer önerinizin revize edilmesi gerekiyorsa, aşağıdaki kutucuğu işaretleyerek revizyon sürecini başlatabilirsiniz. 
+              Revizyon durumunda sadece öneri temel bilgileri ve öneri sahibi kısmını doldurmanız yeterli olacaktır.
+            </p>
+          </div>
+          
+          <FormField
+            control={form.control}
+            name="isRevision"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-center justify-between rounded-lg border bg-white p-4">
+                <div className="space-y-0.5">
+                  <FormLabel className="text-base">
+                    Öneriyi Revize Et
+                  </FormLabel>
+                  <FormDescription>
+                    Sadece temel bilgileri doldurmanız gerekecek
+                  </FormDescription>
+                </div>
+                <FormControl>
+                  <input
+                    type="checkbox"
+                    checked={isRevision}
+                    onChange={(e) => setIsRevision(e.target.checked)}
+                    className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary"
+                  />
+                </FormControl>
+              </FormItem>
+            )}
+          />
+        </CardContent>
+      </Card>
+      
       {/* 1. Öneri Sahibi ve Ekip Bilgileri */}
       <Card className="mb-4">
         <CardContent className="pt-6">
@@ -468,360 +531,279 @@ const KivilcimForm: React.FC<KivilcimFormProps> = ({
               )}
             </div>
           </div>
-          
-          <div className="mt-6">
-            <FormField
-              control={form.control}
-              name="companyContribution"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Şirkete Katkısı</FormLabel>
-                  <FormControl>
-                    <Textarea 
-                      placeholder="Önerinizin şirkete sağlayacağı katkıları açıklayın" 
-                      className="resize-none" 
-                      rows={3}
-                      {...field} 
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Önerinizin şirkete nasıl bir katkı sağlayacağını belirtin
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
         </CardContent>
       </Card>
       
       {/* 3. Maliyet Hesapları */}
-      <Card className="mb-4">
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-lg font-semibold">3. Maliyet Hesapları</h3>
-            <Calculator className="h-5 w-5 text-gray-500" />
-          </div>
-          
-          <div className="space-y-6">
-            {/* Mevcut Durumda İşletim Maliyeti */}
-            <div>
-              <h4 className="font-medium mb-2">Mevcut Durumda İşletim Maliyeti (Mevcut Kayıplar)</h4>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[40%]">Cins ve/veya Açıklama</TableHead>
-                    <TableHead>Miktar</TableHead>
-                    <TableHead>Birim Tutar (₺)</TableHead>
-                    <TableHead>Tutar (₺)</TableHead>
-                    <TableHead className="w-[50px]"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {currentCosts.map((item, index) => (
-                    <TableRow key={index}>
-                      <TableCell>
-                        <Input 
-                          value={item.description} 
-                          onChange={(e) => updateCostItem(index, "description", e.target.value, "current")}
-                          placeholder="Açıklama"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input 
-                          type="number" 
-                          value={item.amount} 
-                          onChange={(e) => updateCostItem(index, "amount", e.target.value, "current")}
-                          className="w-20"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input 
-                          type="number" 
-                          value={item.unitPrice} 
-                          onChange={(e) => updateCostItem(index, "unitPrice", e.target.value, "current")}
-                          className="w-24"
-                        />
-                      </TableCell>
-                      <TableCell>{item.totalPrice.toFixed(2)}</TableCell>
-                      <TableCell>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeCostItem(index, "current")}
-                          className="h-8 w-8 p-0"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-                <TableFooter>
-                  <TableRow>
-                    <TableCell colSpan={3} className="text-right font-medium">Toplam:</TableCell>
-                    <TableCell className="font-medium">{totalCurrentCosts.toFixed(2)} ₺</TableCell>
-                    <TableCell></TableCell>
-                  </TableRow>
-                </TableFooter>
-              </Table>
-              
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => addCostItem("current")}
-                className="mt-2"
-              >
-                <PlusCircle className="h-4 w-4 mr-2" />
-                Maliyet Kalemi Ekle
-              </Button>
+      {!isRevision && (
+        <Card className="mb-4">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">3. Maliyet Hesapları</h3>
+              <Calculator className="h-5 w-5 text-gray-500" />
             </div>
             
-            {/* Önerilen Durumda Yatırım ve İşletim Maliyeti */}
-            <div>
-              <h4 className="font-medium mb-2">Önerilen Durumda Yatırım ve İşletim Maliyeti</h4>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[40%]">Cins ve/veya Açıklama</TableHead>
-                    <TableHead>Miktar</TableHead>
-                    <TableHead>Birim Tutar (₺)</TableHead>
-                    <TableHead>Tutar (₺)</TableHead>
-                    <TableHead className="w-[50px]"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {proposedCosts.map((item, index) => (
-                    <TableRow key={index}>
-                      <TableCell>
-                        <Input 
-                          value={item.description} 
-                          onChange={(e) => updateCostItem(index, "description", e.target.value, "proposed")}
-                          placeholder="Açıklama"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input 
-                          type="number" 
-                          value={item.amount} 
-                          onChange={(e) => updateCostItem(index, "amount", e.target.value, "proposed")}
-                          className="w-20"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input 
-                          type="number" 
-                          value={item.unitPrice} 
-                          onChange={(e) => updateCostItem(index, "unitPrice", e.target.value, "proposed")}
-                          className="w-24"
-                        />
-                      </TableCell>
-                      <TableCell>{item.totalPrice.toFixed(2)}</TableCell>
-                      <TableCell>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeCostItem(index, "proposed")}
-                          className="h-8 w-8 p-0"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
+            <div className="space-y-6">
+              {/* Mevcut Durumda İşletim Maliyeti */}
+              <div>
+                <h4 className="font-medium mb-2">Mevcut Durumda İşletim Maliyeti (Mevcut Kayıplar)</h4>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[40%]">Cins ve/veya Açıklama</TableHead>
+                      <TableHead>Miktar</TableHead>
+                      <TableHead>Birim Tutar (₺)</TableHead>
+                      <TableHead>Tutar (₺)</TableHead>
+                      <TableHead className="w-[50px]"></TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-                <TableFooter>
-                  <TableRow>
-                    <TableCell colSpan={3} className="text-right font-medium">Toplam:</TableCell>
-                    <TableCell className="font-medium">{totalProposedCosts.toFixed(2)} ₺</TableCell>
-                    <TableCell></TableCell>
-                  </TableRow>
-                </TableFooter>
-              </Table>
-              
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => addCostItem("proposed")}
-                className="mt-2"
-              >
-                <PlusCircle className="h-4 w-4 mr-2" />
-                Maliyet Kalemi Ekle
-              </Button>
-            </div>
-            
-            {/* Önerinin Sağladığı Ek Faydalar */}
-            <div>
-              <h4 className="font-medium mb-2">Önerinin Sağladığı Ek Faydalar</h4>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="w-[40%]">Cins ve/veya Açıklama</TableHead>
-                    <TableHead>Miktar</TableHead>
-                    <TableHead>Birim Tutar (₺)</TableHead>
-                    <TableHead>Tutar (₺)</TableHead>
-                    <TableHead className="w-[50px]"></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {additionalBenefits.map((item, index) => (
-                    <TableRow key={index}>
-                      <TableCell>
-                        <Input 
-                          value={item.description} 
-                          onChange={(e) => updateCostItem(index, "description", e.target.value, "benefits")}
-                          placeholder="Fayda açıklaması"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input 
-                          type="number" 
-                          value={item.amount} 
-                          onChange={(e) => updateCostItem(index, "amount", e.target.value, "benefits")}
-                          className="w-20"
-                        />
-                      </TableCell>
-                      <TableCell>
-                        <Input 
-                          type="number" 
-                          value={item.unitPrice} 
-                          onChange={(e) => updateCostItem(index, "unitPrice", e.target.value, "benefits")}
-                          className="w-24"
-                        />
-                      </TableCell>
-                      <TableCell>{item.totalPrice.toFixed(2)}</TableCell>
-                      <TableCell>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeCostItem(index, "benefits")}
-                          className="h-8 w-8 p-0"
-                        >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
+                  </TableHeader>
+                  <TableBody>
+                    {currentCosts.map((item, index) => (
+                      <TableRow key={index}>
+                        <TableCell>
+                          <Input 
+                            value={item.description} 
+                            onChange={(e) => updateCostItem(index, "description", e.target.value, "current")}
+                            placeholder="Açıklama"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input 
+                            type="number" 
+                            value={item.amount} 
+                            onChange={(e) => updateCostItem(index, "amount", e.target.value, "current")}
+                            className="w-20"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input 
+                            type="number" 
+                            value={item.unitPrice} 
+                            onChange={(e) => updateCostItem(index, "unitPrice", e.target.value, "current")}
+                            className="w-24"
+                          />
+                        </TableCell>
+                        <TableCell>{item.totalPrice.toFixed(2)}</TableCell>
+                        <TableCell>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeCostItem(index, "current")}
+                            className="h-8 w-8 p-0"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                  <TableFooter>
+                    <TableRow>
+                      <TableCell colSpan={3} className="text-right font-medium">Toplam:</TableCell>
+                      <TableCell className="font-medium">{totalCurrentCosts.toFixed(2)} ₺</TableCell>
+                      <TableCell></TableCell>
                     </TableRow>
-                  ))}
-                </TableBody>
-                <TableFooter>
-                  <TableRow>
-                    <TableCell colSpan={3} className="text-right font-medium">Toplam:</TableCell>
-                    <TableCell className="font-medium">{totalBenefits.toFixed(2)} ₺</TableCell>
-                    <TableCell></TableCell>
-                  </TableRow>
-                </TableFooter>
-              </Table>
+                  </TableFooter>
+                </Table>
+                
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => addCostItem("current")}
+                  className="mt-2"
+                >
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Maliyet Kalemi Ekle
+                </Button>
+              </div>
               
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => addCostItem("benefits")}
-                className="mt-2"
-              >
-                <PlusCircle className="h-4 w-4 mr-2" />
-                Fayda Kalemi Ekle
-              </Button>
-            </div>
-            
-            {/* Fayda/Maliyet Oranı */}
-            <div className="mt-6 bg-gray-50 p-4 rounded-md">
-              <h4 className="font-medium mb-3">Fayda/Maliyet Analizi</h4>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span>Mevcut Durum Maliyeti (Yıllık):</span>
-                  <span className="font-medium">{totalCurrentCosts.toFixed(2)} ₺</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>Önerilen Durum Maliyeti:</span>
-                  <span className="font-medium">{totalProposedCosts.toFixed(2)} ₺</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span>Ek Faydalar (Yıllık):</span>
-                  <span className="font-medium">{totalBenefits.toFixed(2)} ₺</span>
-                </div>
-                <Separator className="my-2" />
-                <div className="flex justify-between items-center">
-                  <span>Net Fayda (Yıllık):</span>
-                  <span className="font-medium">{(totalCurrentCosts + totalBenefits - totalProposedCosts).toFixed(2)} ₺</span>
-                </div>
-                <div className="flex justify-between items-center font-bold">
-                  <span>F/M ORANI:</span>
-                  <span>
-                    {totalProposedCosts > 0 ? 
-                      ((totalCurrentCosts + totalBenefits) / totalProposedCosts).toFixed(2) : 
-                      "∞"}
-                  </span>
+              {/* Önerilen Durumda Yatırım ve İşletim Maliyeti */}
+              <div>
+                <h4 className="font-medium mb-2">Önerilen Durumda Yatırım ve İşletim Maliyeti</h4>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[40%]">Cins ve/veya Açıklama</TableHead>
+                      <TableHead>Miktar</TableHead>
+                      <TableHead>Birim Tutar (₺)</TableHead>
+                      <TableHead>Tutar (₺)</TableHead>
+                      <TableHead className="w-[50px]"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {proposedCosts.map((item, index) => (
+                      <TableRow key={index}>
+                        <TableCell>
+                          <Input 
+                            value={item.description} 
+                            onChange={(e) => updateCostItem(index, "description", e.target.value, "proposed")}
+                            placeholder="Açıklama"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input 
+                            type="number" 
+                            value={item.amount} 
+                            onChange={(e) => updateCostItem(index, "amount", e.target.value, "proposed")}
+                            className="w-20"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input 
+                            type="number" 
+                            value={item.unitPrice} 
+                            onChange={(e) => updateCostItem(index, "unitPrice", e.target.value, "proposed")}
+                            className="w-24"
+                          />
+                        </TableCell>
+                        <TableCell>{item.totalPrice.toFixed(2)}</TableCell>
+                        <TableCell>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeCostItem(index, "proposed")}
+                            className="h-8 w-8 p-0"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                  <TableFooter>
+                    <TableRow>
+                      <TableCell colSpan={3} className="text-right font-medium">Toplam:</TableCell>
+                      <TableCell className="font-medium">{totalProposedCosts.toFixed(2)} ₺</TableCell>
+                      <TableCell></TableCell>
+                    </TableRow>
+                  </TableFooter>
+                </Table>
+                
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => addCostItem("proposed")}
+                  className="mt-2"
+                >
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Maliyet Kalemi Ekle
+                </Button>
+              </div>
+              
+              {/* Önerinin Sağladığı Ek Faydalar */}
+              <div>
+                <h4 className="font-medium mb-2">Önerinin Sağladığı Ek Faydalar</h4>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="w-[40%]">Cins ve/veya Açıklama</TableHead>
+                      <TableHead>Miktar</TableHead>
+                      <TableHead>Birim Tutar (₺)</TableHead>
+                      <TableHead>Tutar (₺)</TableHead>
+                      <TableHead className="w-[50px]"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {additionalBenefits.map((item, index) => (
+                      <TableRow key={index}>
+                        <TableCell>
+                          <Input 
+                            value={item.description} 
+                            onChange={(e) => updateCostItem(index, "description", e.target.value, "benefits")}
+                            placeholder="Fayda açıklaması"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input 
+                            type="number" 
+                            value={item.amount} 
+                            onChange={(e) => updateCostItem(index, "amount", e.target.value, "benefits")}
+                            className="w-20"
+                          />
+                        </TableCell>
+                        <TableCell>
+                          <Input 
+                            type="number" 
+                            value={item.unitPrice} 
+                            onChange={(e) => updateCostItem(index, "unitPrice", e.target.value, "benefits")}
+                            className="w-24"
+                          />
+                        </TableCell>
+                        <TableCell>{item.totalPrice.toFixed(2)}</TableCell>
+                        <TableCell>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeCostItem(index, "benefits")}
+                            className="h-8 w-8 p-0"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                  <TableFooter>
+                    <TableRow>
+                      <TableCell colSpan={3} className="text-right font-medium">Toplam:</TableCell>
+                      <TableCell className="font-medium">{totalBenefits.toFixed(2)} ₺</TableCell>
+                      <TableCell></TableCell>
+                    </TableRow>
+                  </TableFooter>
+                </Table>
+                
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => addCostItem("benefits")}
+                  className="mt-2"
+                >
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Fayda Kalemi Ekle
+                </Button>
+              </div>
+              
+              {/* Fayda/Maliyet Oranı */}
+              <div className="mt-6 bg-gray-50 p-4 rounded-md">
+                <h4 className="font-medium mb-3">Fayda/Maliyet Analizi</h4>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span>Mevcut Durum Maliyeti (Yıllık):</span>
+                    <span className="font-medium">{totalCurrentCosts.toFixed(2)} ₺</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Önerilen Durum Maliyeti:</span>
+                    <span className="font-medium">{totalProposedCosts.toFixed(2)} ₺</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span>Ek Faydalar (Yıllık):</span>
+                    <span className="font-medium">{totalBenefits.toFixed(2)} ₺</span>
+                  </div>
+                  <Separator className="my-2" />
+                  <div className="flex justify-between items-center">
+                    <span>Net Fayda (Yıllık):</span>
+                    <span className="font-medium">{(totalCurrentCosts + totalBenefits - totalProposedCosts).toFixed(2)} ₺</span>
+                  </div>
+                  <div className="flex justify-between items-center font-bold">
+                    <span>F/M ORANI:</span>
+                    <span>
+                      {totalProposedCosts > 0 ? 
+                        ((totalCurrentCosts + totalBenefits) / totalProposedCosts).toFixed(2) : 
+                        "∞"}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </CardContent>
-      </Card>
-      
-      {/* 4. Ön Kontrol Listesi */}
-      <Card className="mb-4">
-        <CardContent className="pt-6">
-          <h3 className="text-lg font-semibold mb-4">4. Ön Kontrol Listesi</h3>
-          
-          <FormField
-            control={form.control}
-            name="preChecklistItems"
-            render={() => (
-              <FormItem>
-                <div className="space-y-3">
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="checklist-1"
-                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                    />
-                    <label htmlFor="checklist-1" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                      Önerimin uygulanabilir olduğunu kontrol ettim
-                    </label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="checklist-2"
-                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                    />
-                    <label htmlFor="checklist-2" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                      Öneri formunu eksiksiz doldurdum
-                    </label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="checklist-3"
-                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                    />
-                    <label htmlFor="checklist-3" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                      Önerimle ilgili gerekli fotoğraf ve dokümanları ekledim
-                    </label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id="checklist-4"
-                      className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
-                    />
-                    <label htmlFor="checklist-4" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-                      Maliyet hesaplarını doğru bir şekilde yaptım
-                    </label>
-                  </div>
-                </div>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </CardContent>
-      </Card>
+          </CardContent>
+        </Card>
+      )}
     </>
   );
 };
