@@ -26,8 +26,10 @@ export default function SuggestionsList() {
   const currentUser = userData?.user || null;
   
   // Fetch suggestions
-  const { data: suggestionsData, isLoading } = useQuery<Suggestion[]>({
+  const { data: suggestionsData, isLoading, refetch } = useQuery<Suggestion[]>({
     queryKey: ['/api/suggestions'],
+    refetchOnWindowFocus: true,
+    refetchInterval: 10000, // Her 10 saniyede bir otomatik güncelleme
     onError: (error: any) => {
       toast({
         title: "Hata",
@@ -45,14 +47,34 @@ export default function SuggestionsList() {
     switch (status) {
       case SUGGESTION_STATUSES.NEW:
         return "Yeni";
-      case SUGGESTION_STATUSES.REVIEW:
-        return "İnceleniyor";
+      case SUGGESTION_STATUSES.DEPARTMENT_REVIEW:
+        return "Bölüm İncelemesinde";
+      case SUGGESTION_STATUSES.FEASIBILITY_ASSESSMENT:
+        return "Yapılabilirlik Değerlendirmesinde";
+      case SUGGESTION_STATUSES.FEASIBILITY_REJECTED:
+        return "Yapılabilirlik Düşük";
+      case SUGGESTION_STATUSES.SOLUTION_IDENTIFIED:
+        return "Çözüm Belirlenmiş";
+      case SUGGESTION_STATUSES.COST_ASSESSMENT:
+        return "Maliyet Değerlendirmesinde";
+      case SUGGESTION_STATUSES.COST_REJECTED:
+        return "Maliyet Yüksek";
+      case SUGGESTION_STATUSES.EXECUTIVE_REVIEW:
+        return "Genel Müdür İncelemesinde";
       case SUGGESTION_STATUSES.APPROVED:
         return "Onaylandı";
-      case SUGGESTION_STATUSES.IMPLEMENTED:
-        return "Uygulandı";
       case SUGGESTION_STATUSES.REJECTED:
         return "Reddedildi";
+      case SUGGESTION_STATUSES.IN_PROGRESS:
+        return "Uygulanıyor";
+      case SUGGESTION_STATUSES.REPORTED:
+        return "Rapor Edildi";
+      case SUGGESTION_STATUSES.EVALUATED:
+        return "Değerlendirildi";
+      case SUGGESTION_STATUSES.REWARDED:
+        return "Ödüllendirildi";
+      case SUGGESTION_STATUSES.COMPLETED:
+        return "Tamamlandı";
       default:
         return status;
     }
@@ -62,14 +84,29 @@ export default function SuggestionsList() {
     switch (status) {
       case SUGGESTION_STATUSES.NEW:
         return "bg-blue-500";
-      case SUGGESTION_STATUSES.REVIEW:
+      case SUGGESTION_STATUSES.DEPARTMENT_REVIEW:
+      case SUGGESTION_STATUSES.FEASIBILITY_ASSESSMENT:
+      case SUGGESTION_STATUSES.COST_ASSESSMENT:
+      case SUGGESTION_STATUSES.EXECUTIVE_REVIEW:
         return "bg-yellow-500";
-      case SUGGESTION_STATUSES.APPROVED:
-        return "bg-green-500";
-      case SUGGESTION_STATUSES.IMPLEMENTED:
-        return "bg-indigo-700";
+      case SUGGESTION_STATUSES.SOLUTION_IDENTIFIED:
+        return "bg-cyan-500";
+      case SUGGESTION_STATUSES.FEASIBILITY_REJECTED:
+      case SUGGESTION_STATUSES.COST_REJECTED:
       case SUGGESTION_STATUSES.REJECTED:
         return "bg-red-500";
+      case SUGGESTION_STATUSES.APPROVED:
+        return "bg-green-500";
+      case SUGGESTION_STATUSES.IN_PROGRESS:
+        return "bg-indigo-600";
+      case SUGGESTION_STATUSES.REPORTED:
+        return "bg-purple-500";
+      case SUGGESTION_STATUSES.EVALUATED:
+        return "bg-amber-500";
+      case SUGGESTION_STATUSES.REWARDED:
+        return "bg-green-600";
+      case SUGGESTION_STATUSES.COMPLETED:
+        return "bg-green-700";
       default:
         return "bg-gray-500";
     }
@@ -127,10 +164,15 @@ export default function SuggestionsList() {
             <SelectContent>
               <SelectItem value="all">Tüm Durumlar</SelectItem>
               <SelectItem value={SUGGESTION_STATUSES.NEW}>Yeni</SelectItem>
-              <SelectItem value={SUGGESTION_STATUSES.REVIEW}>İnceleniyor</SelectItem>
+              <SelectItem value={SUGGESTION_STATUSES.DEPARTMENT_REVIEW}>Bölüm İncelemesinde</SelectItem>
+              <SelectItem value={SUGGESTION_STATUSES.FEASIBILITY_ASSESSMENT}>Yapılabilirlik Değerlendirmesinde</SelectItem>
+              <SelectItem value={SUGGESTION_STATUSES.SOLUTION_IDENTIFIED}>Çözüm Belirlenmiş</SelectItem>
+              <SelectItem value={SUGGESTION_STATUSES.COST_ASSESSMENT}>Maliyet Değerlendirmesinde</SelectItem>
+              <SelectItem value={SUGGESTION_STATUSES.EXECUTIVE_REVIEW}>Genel Müdür İncelemesinde</SelectItem>
               <SelectItem value={SUGGESTION_STATUSES.APPROVED}>Onaylandı</SelectItem>
-              <SelectItem value={SUGGESTION_STATUSES.IMPLEMENTED}>Uygulandı</SelectItem>
               <SelectItem value={SUGGESTION_STATUSES.REJECTED}>Reddedildi</SelectItem>
+              <SelectItem value={SUGGESTION_STATUSES.IN_PROGRESS}>Uygulanıyor</SelectItem>
+              <SelectItem value={SUGGESTION_STATUSES.COMPLETED}>Tamamlandı</SelectItem>
             </SelectContent>
           </Select>
         </div>

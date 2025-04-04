@@ -47,8 +47,9 @@ export default function CreateSuggestion() {
     try {
       await apiRequest("POST", "/api/suggestions", values);
       
-      queryClient.invalidateQueries({ queryKey: ['/api/suggestions'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/stats/suggestions'] });
+      // Öneri listesini hemen güncelle, kullanıcıya yeni önerileri göster
+      await queryClient.invalidateQueries({ queryKey: ['/api/suggestions'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/stats/suggestions'] });
       
       toast({
         title: "Başarılı",
