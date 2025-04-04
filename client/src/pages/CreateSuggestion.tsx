@@ -23,7 +23,7 @@ import { z } from "zod";
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
-import { Upload, PlusCircle, X, User as UserIcon } from "lucide-react";
+import { Upload, PlusCircle, X, User as UserIcon, Sparkles, Zap } from "lucide-react";
 
 // Transform the schema for form usage
 const formSchema = extendedInsertSuggestionSchema.omit({ submittedBy: true });
@@ -33,12 +33,14 @@ export default function CreateSuggestion() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [, setLocation] = useLocation();
   
-  // Get current user
+  // Get current user and suggestion type
   const { data: userData } = useQuery<{ user: User | null }>({ 
     queryKey: ['/api/auth/user'],
   });
   
   const currentUser = userData?.user || null;
+  // Öneri tipini localStorage'dan alıyoruz
+  const selectedSuggestionType = localStorage.getItem("selectedSuggestionType");
   
   // Yüklenen dosyalar için state
   const [currentStateFiles, setCurrentStateFiles] = useState<string[]>([]);
@@ -75,7 +77,7 @@ export default function CreateSuggestion() {
       description: "",
       category: SUGGESTION_CATEGORIES.QUALITY,
       benefits: "",
-      kaizenType: KAIZEN_TYPES.BEFORE_AFTER,
+      kaizenType: selectedSuggestionType === "kaizen" ? KAIZEN_TYPES.BEFORE_AFTER : undefined,
       improvementType: IMPROVEMENT_TYPES.QUALITY,
       targetDepartment: departments[0],
       teamMembers: [],
@@ -95,7 +97,13 @@ export default function CreateSuggestion() {
     setIsSubmitting(true);
     
     try {
-      await apiRequest("POST", "/api/suggestions", values);
+      // Öneri tipini form değerlerine ekliyoruz
+      const suggestionData = {
+        ...values,
+        suggestionType: selectedSuggestionType // "kaizen" veya "kivilcim"
+      };
+      
+      await apiRequest("POST", "/api/suggestions", suggestionData);
       
       // Öneri listesini hemen güncelle, kullanıcıya yeni önerileri göster
       await queryClient.invalidateQueries({ queryKey: ['/api/suggestions'] });
@@ -127,8 +135,26 @@ export default function CreateSuggestion() {
       <TabNavigation activeTab="create" user={currentUser} />
       
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-neutral-900">Yeni Öneri Oluştur</h2>
-        <p className="text-neutral-700">Kaizen iyileştirme önerinizi paylaşın</p>
+        <h2 className="text-2xl font-bold text-neutral-900">
+          {selectedSuggestionType === "kaizen" ? "Yeni Kaizen Önerisi Oluştur" : "Yeni Kıvılcım Önerisi Oluştur"}
+        </h2>
+        <p className="text-neutral-700">
+          {selectedSuggestionType === "kaizen" 
+            ? "Kaizen iyileştirme önerinizi paylaşın" 
+            : "Kıvılcım hızlı çözüm önerinizi paylaşın"}
+        </p>
+        <div className="mt-2 flex items-center">
+          {selectedSuggestionType === "kaizen" ? (
+            <Sparkles className="h-5 w-5 mr-2 text-blue-600" />
+          ) : (
+            <Zap className="h-5 w-5 mr-2 text-amber-500" />
+          )}
+          <span className="text-sm text-gray-500">
+            {selectedSuggestionType === "kaizen" 
+              ? "Kaizen: Kapsamlı iyileştirme projeleri için sürekli gelişim önerileri" 
+              : "Kıvılcım: Daha basit, hızlı uygulanabilir öneriler"}
+          </span>
+        </div>
       </div>
       
       <div className="bg-white rounded-lg shadow p-6">
@@ -181,46 +207,48 @@ export default function CreateSuggestion() {
                 </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                  <FormField
-                    control={form.control}
-                    name="kaizenType"
-                    render={({ field }) => (
-                      <FormItem className="space-y-3">
-                        <FormLabel>Kaizen Türü *</FormLabel>
-                        <FormControl>
-                          <RadioGroup
-                            onValueChange={field.onChange}
-                            value={field.value || ""}
-                            className="flex flex-col space-y-1"
-                          >
-                            <FormItem className="flex items-center space-x-3 space-y-0">
-                              <FormControl>
-                                <RadioGroupItem value={KAIZEN_TYPES.BEFORE_AFTER} />
-                              </FormControl>
-                              <FormLabel className="font-normal">
-                                Önce-Sonra Kaizen
-                              </FormLabel>
-                            </FormItem>
-                            <FormItem className="flex items-center space-x-3 space-y-0">
-                              <FormControl>
-                                <RadioGroupItem value={KAIZEN_TYPES.KOBETSU} />
-                              </FormControl>
-                              <FormLabel className="font-normal">
-                                Kobetsu Kaizen
-                              </FormLabel>
-                            </FormItem>
-                          </RadioGroup>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  {selectedSuggestionType === "kaizen" && (
+                    <FormField
+                      control={form.control}
+                      name="kaizenType"
+                      render={({ field }) => (
+                        <FormItem className="space-y-3">
+                          <FormLabel>Kaizen Türü *</FormLabel>
+                          <FormControl>
+                            <RadioGroup
+                              onValueChange={field.onChange}
+                              value={field.value || ""}
+                              className="flex flex-col space-y-1"
+                            >
+                              <FormItem className="flex items-center space-x-3 space-y-0">
+                                <FormControl>
+                                  <RadioGroupItem value={KAIZEN_TYPES.BEFORE_AFTER} />
+                                </FormControl>
+                                <FormLabel className="font-normal">
+                                  Önce-Sonra Kaizen
+                                </FormLabel>
+                              </FormItem>
+                              <FormItem className="flex items-center space-x-3 space-y-0">
+                                <FormControl>
+                                  <RadioGroupItem value={KAIZEN_TYPES.KOBETSU} />
+                                </FormControl>
+                                <FormLabel className="font-normal">
+                                  Kobetsu Kaizen
+                                </FormLabel>
+                              </FormItem>
+                            </RadioGroup>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  )}
                   
                   <FormField
                     control={form.control}
                     name="improvementType"
                     render={({ field }) => (
-                      <FormItem>
+                      <FormItem className={selectedSuggestionType === "kaizen" ? "" : "md:col-span-2"}>
                         <FormLabel>İyileştirme Türü *</FormLabel>
                         <Select 
                           onValueChange={field.onChange} 
@@ -255,111 +283,115 @@ export default function CreateSuggestion() {
             </Card>
             
             {/* 2. Bölüm: Ekip Üyeleri ve Proje Lideri */}
-            <Card className="mb-4">
-              <CardContent className="pt-6">
-                <h3 className="text-lg font-semibold mb-4">2. Ekip Bilgileri</h3>
-                
-                <div className="space-y-4">
-                  <FormField
-                    control={form.control}
-                    name="teamMembers"
-                    render={({ field }) => (
-                      <FormItem className="space-y-2">
-                        <FormLabel>Ekip Üyeleri (Maksimum 4 kişi)</FormLabel>
-                        <FormControl>
-                          <div className="space-y-2">
-                            {teamMembers.map((member, index) => (
-                              <div key={index} className="flex items-center space-x-2 bg-gray-50 p-2 rounded">
-                                <UserIcon className="h-4 w-4 text-gray-500" />
-                                <span>{member.name}</span>
-                                <Button
-                                  type="button"
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 w-8 p-0 ml-auto"
-                                  onClick={() => {
-                                    const newMembers = [...teamMembers];
-                                    newMembers.splice(index, 1);
-                                    setTeamMembers(newMembers);
-                                    field.onChange(newMembers);
-                                  }}
-                                >
-                                  <X className="h-4 w-4" />
-                                </Button>
-                              </div>
-                            ))}
-                            
-                            {teamMembers.length < 4 && (
-                              <Button
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                className="mt-2"
-                                onClick={() => {
-                                  // Normalde bir modal açılıp kullanıcı seçimi yapılabilir
-                                  // Örnek olarak şu an sabit değer ekliyoruz
-                                  if (currentUser) {
-                                    const newMember = {
-                                      id: currentUser.id,
-                                      name: currentUser.username || `Kullanıcı-${currentUser.id}`
-                                    };
-                                    const newMembers = [...teamMembers, newMember];
-                                    setTeamMembers(newMembers);
-                                    field.onChange(newMembers);
-                                  }
-                                }}
-                              >
-                                <PlusCircle className="h-4 w-4 mr-2" />
-                                Ekip Üyesi Ekle
-                              </Button>
-                            )}
-                          </div>
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+            {selectedSuggestionType === "kaizen" && (
+              <Card className="mb-4">
+                <CardContent className="pt-6">
+                  <h3 className="text-lg font-semibold mb-4">2. Ekip Bilgileri</h3>
                   
-                  {showLeaderField && (
+                  <div className="space-y-4">
                     <FormField
                       control={form.control}
-                      name="projectLeader"
+                      name="teamMembers"
                       render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Proje Lideri (Kobetsu Kaizen için zorunlu)</FormLabel>
-                          <Select 
-                            onValueChange={(value) => field.onChange(parseInt(value))} 
-                            value={field.value?.toString()}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Proje lideri seçin" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {teamMembers.map((member) => (
-                                <SelectItem key={member.id} value={member.id.toString()}>
-                                  {member.name}
-                                </SelectItem>
+                        <FormItem className="space-y-2">
+                          <FormLabel>Ekip Üyeleri (Maksimum 4 kişi)</FormLabel>
+                          <FormControl>
+                            <div className="space-y-2">
+                              {teamMembers.map((member, index) => (
+                                <div key={index} className="flex items-center space-x-2 bg-gray-50 p-2 rounded">
+                                  <UserIcon className="h-4 w-4 text-gray-500" />
+                                  <span>{member.name}</span>
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="sm"
+                                    className="h-8 w-8 p-0 ml-auto"
+                                    onClick={() => {
+                                      const newMembers = [...teamMembers];
+                                      newMembers.splice(index, 1);
+                                      setTeamMembers(newMembers);
+                                      field.onChange(newMembers);
+                                    }}
+                                  >
+                                    <X className="h-4 w-4" />
+                                  </Button>
+                                </div>
                               ))}
-                            </SelectContent>
-                          </Select>
-                          <FormDescription>
-                            Proje lideri, ekip üyeleri arasından seçilmelidir.
-                          </FormDescription>
+                              
+                              {teamMembers.length < 4 && (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  className="mt-2"
+                                  onClick={() => {
+                                    // Normalde bir modal açılıp kullanıcı seçimi yapılabilir
+                                    // Örnek olarak şu an sabit değer ekliyoruz
+                                    if (currentUser) {
+                                      const newMember = {
+                                        id: currentUser.id,
+                                        name: currentUser.username || `Kullanıcı-${currentUser.id}`
+                                      };
+                                      const newMembers = [...teamMembers, newMember];
+                                      setTeamMembers(newMembers);
+                                      field.onChange(newMembers);
+                                    }
+                                  }}
+                                >
+                                  <PlusCircle className="h-4 w-4 mr-2" />
+                                  Ekip Üyesi Ekle
+                                </Button>
+                              )}
+                            </div>
+                          </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                    
+                    {showLeaderField && (
+                      <FormField
+                        control={form.control}
+                        name="projectLeader"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Proje Lideri (Kobetsu Kaizen için zorunlu)</FormLabel>
+                            <Select 
+                              onValueChange={(value) => field.onChange(parseInt(value))} 
+                              value={field.value?.toString()}
+                            >
+                              <FormControl>
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Proje lideri seçin" />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                {teamMembers.map((member) => (
+                                  <SelectItem key={member.id} value={member.id.toString()}>
+                                    {member.name}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            <FormDescription>
+                              Proje lideri, ekip üyeleri arasından seçilmelidir.
+                            </FormDescription>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
             
-            {/* 3. Bölüm: Kaizen Detayları */}
+            {/* Öneri Detayları */}
             <Card className="mb-4">
               <CardContent className="pt-6">
-                <h3 className="text-lg font-semibold mb-4">3. Kaizen Detayları</h3>
+                <h3 className="text-lg font-semibold mb-4">
+                  {selectedSuggestionType === "kaizen" ? "3. Kaizen Detayları" : "2. Kıvılcım Detayları"}
+                </h3>
                 
                 <FormField
                   control={form.control}
@@ -503,10 +535,12 @@ export default function CreateSuggestion() {
               </CardContent>
             </Card>
             
-            {/* 4. Bölüm: Şirkete Katkısı */}
+            {/* Şirkete Katkısı */}
             <Card className="mb-4">
               <CardContent className="pt-6">
-                <h3 className="text-lg font-semibold mb-4">4. Şirkete Katkısı</h3>
+                <h3 className="text-lg font-semibold mb-4">
+                  {selectedSuggestionType === "kaizen" ? "4. Şirkete Katkısı" : "3. Şirkete Katkısı"}
+                </h3>
                 
                 <FormField
                   control={form.control}

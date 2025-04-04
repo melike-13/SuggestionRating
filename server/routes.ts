@@ -123,12 +123,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Suggestion routes
   app.post("/api/suggestions", isAuthenticated, async (req, res) => {
     try {
+      // Öneri tipini al ama veriyi doğrulamada kullanmayacağız
+      const { suggestionType, ...rest } = req.body;
+      
       const validatedData = extendedInsertSuggestionSchema.parse({
-        ...req.body,
+        ...rest,
         submittedBy: (req.user as any).id
       });
       
-      const suggestion = await storage.createSuggestion(validatedData);
+      // Öneri tipini ve doğrulanmış veriyi birleştir
+      const suggestionData = {
+        ...validatedData,
+        suggestionType: suggestionType || "kaizen" // Varsayılan olarak kaizen
+      };
+      
+      const suggestion = await storage.createSuggestion(suggestionData);
       
       // Yeni öneri bildirimi gönder
       sendNewSuggestionNotification(suggestion);

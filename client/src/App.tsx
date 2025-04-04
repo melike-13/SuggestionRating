@@ -6,9 +6,10 @@ import SuggestionsList from "@/pages/SuggestionsList";
 import CreateSuggestion from "@/pages/CreateSuggestion";
 import AdminPanel from "@/pages/AdminPanel";
 import UserAdmin from "@/pages/UserAdmin";
+import SuggestionTypeSelection from "@/pages/SuggestionTypeSelection";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import { useState, useEffect } from "react";
+import { useState, useEffect, createContext, useContext } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/lib/queryClient";
 import { User } from "@shared/schema";
@@ -16,10 +17,26 @@ import { User } from "@shared/schema";
 export type AuthContextType = {
   user: User | null;
   isLoading: boolean;
+  selectedSuggestionType: string | null;
+  setSelectedSuggestionType: (type: string | null) => void;
 };
+
+export const AuthContext = createContext<AuthContextType | null>(null);
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+}
 
 function App() {
   const [location, setLocation] = useLocation();
+  const [selectedSuggestionType, setSelectedSuggestionType] = useState<string | null>(
+    localStorage.getItem("selectedSuggestionType")
+  );
+  
   const { data, isLoading } = useQuery<{ user: User | null }>({
     queryKey: ["/api/auth/user"],
   });
@@ -30,58 +47,85 @@ function App() {
   useEffect(() => {
     if (!isLoading && !user && location !== "/login") {
       setLocation("/login");
+      // Clear suggestion type when logging out
+      setSelectedSuggestionType(null);
+      localStorage.removeItem("selectedSuggestionType");
     }
   }, [user, isLoading, location, setLocation]);
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header user={user} isLoading={isLoading} />
+    <AuthContext.Provider value={{ user, isLoading, selectedSuggestionType, setSelectedSuggestionType }}>
+      <div className="min-h-screen flex flex-col">
+        <Header user={user} isLoading={isLoading} />
 
-      <main className="flex-grow container mx-auto px-4 py-6">
-        <Switch>
-          <Route path="/login" component={() => <LoginPage />} />
-          <Route path="/" component={Dashboard} />
-          <Route path="/suggestions" component={SuggestionsList} />
-          <Route path="/create" component={CreateSuggestion} />
-          <Route
-            path="/admin"
-            component={() => {
-              if (user?.isAdmin) {
-                return <AdminPanel />;
-              } else {
-                // Admin olmayan kullanıcılar için yönlendirme
-                setTimeout(() => setLocation("/"), 0);
-                return (
-                  <div>
-                    Yetkisiz erişim, ana sayfaya yönlendiriliyorsunuz...
-                  </div>
-                );
-              }
-            }}
-          />
-          <Route
-            path="/users"
-            component={() => {
-              if (user?.isAdmin) {
-                return <UserAdmin />;
-              } else {
-                // Admin olmayan kullanıcılar için yönlendirme
-                setTimeout(() => setLocation("/"), 0);
-                return (
-                  <div>
-                    Yetkisiz erişim, ana sayfaya yönlendiriliyorsunuz...
-                  </div>
-                );
-              }
-            }}
-          />
-          <Route component={NotFound} />
-        </Switch>
-      </main>
+        <main className="flex-grow container mx-auto px-4 py-6">
+          {!isLoading && (
+            <>
+              {!user ? (
+                <Switch>
+                  <Route path="/login" component={() => <LoginPage />} />
+                  <Route component={() => <LoginPage />} />
+                </Switch>
+              ) : (
+                <>
+                  {!selectedSuggestionType ? (
+                    <Switch>
+                      <Route path="/select-type" component={() => <SuggestionTypeSelection user={user} />} />
+                      <Route component={() => <SuggestionTypeSelection user={user} />} />
+                    </Switch>
+                  ) : (
+                    <Switch>
+                      <Route path="/login" component={() => <LoginPage />} />
+                      <Route path="/select-type" component={() => <SuggestionTypeSelection user={user} />} />
+                      <Route path="/" component={Dashboard} />
+                      <Route path="/dashboard" component={Dashboard} />
+                      <Route path="/suggestions" component={SuggestionsList} />
+                      <Route path="/create" component={CreateSuggestion} />
+                      <Route
+                        path="/admin"
+                        component={() => {
+                          if (user?.isAdmin) {
+                            return <AdminPanel />;
+                          } else {
+                            // Admin olmayan kullanıcılar için yönlendirme
+                            setTimeout(() => setLocation("/"), 0);
+                            return (
+                              <div>
+                                Yetkisiz erişim, ana sayfaya yönlendiriliyorsunuz...
+                              </div>
+                            );
+                          }
+                        }}
+                      />
+                      <Route
+                        path="/users"
+                        component={() => {
+                          if (user?.isAdmin) {
+                            return <UserAdmin />;
+                          } else {
+                            // Admin olmayan kullanıcılar için yönlendirme
+                            setTimeout(() => setLocation("/"), 0);
+                            return (
+                              <div>
+                                Yetkisiz erişim, ana sayfaya yönlendiriliyorsunuz...
+                              </div>
+                            );
+                          }
+                        }}
+                      />
+                      <Route component={NotFound} />
+                    </Switch>
+                  )}
+                </>
+              )}
+            </>
+          )}
+        </main>
 
-      <Footer />
-      <Toaster />
-    </div>
+        <Footer />
+        <Toaster />
+      </div>
+    </AuthContext.Provider>
   );
 }
 

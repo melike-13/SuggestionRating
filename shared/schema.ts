@@ -61,8 +61,11 @@ export const suggestions = pgTable("suggestions", {
   benefits: text("benefits").notNull(),
   status: text("status").notNull().default("new"),
   
+  // Öneri tipi "kaizen" veya "kivilcim" değerlerini alır
+  suggestionType: text("suggestion_type").notNull().default("kaizen"),
+  
   // Kaizen türü ve iyileştirme türü
-  kaizenType: text("kaizen_type").notNull().default(KAIZEN_TYPES.BEFORE_AFTER),
+  kaizenType: text("kaizen_type").default(KAIZEN_TYPES.BEFORE_AFTER),
   improvementType: text("improvement_type").notNull().default(IMPROVEMENT_TYPES.QUALITY),
   
   // Uygulanacak departman
@@ -166,6 +169,7 @@ export const insertSuggestionSchema = createInsertSchema(suggestions).omit({
   id: true,
   status: true,
   submittedAt: true,
+  suggestionType: true, // API'de ayrıca gönderilecek
   
   // Bölüm müdürü incelemesi
   departmentManagerId: true,
@@ -303,11 +307,11 @@ export const extendedInsertSuggestionSchema = insertSuggestionSchema.extend({
     SUGGESTION_CATEGORIES.OTHER
   ]),
   
-  // Kaizen türü
+  // Kaizen türü - Kaizen için zorunlu, Kıvılcım için opsiyonel
   kaizenType: z.enum([
     KAIZEN_TYPES.BEFORE_AFTER,
     KAIZEN_TYPES.KOBETSU
-  ]),
+  ]).optional(),
   
   // İyileştirme türü
   improvementType: z.enum([
