@@ -42,14 +42,14 @@ export default function SuggestionDetailModal({
   const [departmentFeedback, setDepartmentFeedback] = useState(suggestion?.departmentFeedback || "");
   
   // Yapılabilirlik değerlendirmesi
-  const [feasibilityScore, setFeasibilityScore] = useState<number>(suggestion?.feasibilityScore || 0);
+  const [feasibilityScore, setFeasibilityScore] = useState<number>(suggestion?.feasibilityScore ? Number(suggestion.feasibilityScore) : 0);
   const [feasibilityFeedback, setFeasibilityFeedback] = useState(suggestion?.feasibilityFeedback || "");
   
   // Çözüm önerisi
   const [solutionDescription, setSolutionDescription] = useState(suggestion?.solutionDescription || "");
   
   // Maliyet değerlendirmesi
-  const [costScore, setCostScore] = useState<number>(suggestion?.costScore || 0);
+  const [costScore, setCostScore] = useState<number>(suggestion?.costScore ? Number(suggestion.costScore) : 0);
   const [costDetails, setCostDetails] = useState(suggestion?.costDetails || "");
   
   // Genel müdür değerlendirmesi
@@ -62,7 +62,7 @@ export default function SuggestionDetailModal({
   const [reportDetails, setReportDetails] = useState(suggestion?.reportDetails || "");
   
   // Değerlendirme
-  const [evaluationScore, setEvaluationScore] = useState<number>(suggestion?.evaluationScore || 0);
+  const [evaluationScore, setEvaluationScore] = useState<number>(suggestion?.evaluationScore ? Number(suggestion.evaluationScore) : 0);
   const [evaluationNotes, setEvaluationNotes] = useState(suggestion?.evaluationNotes || "");
   
   // Ödül
@@ -78,14 +78,14 @@ export default function SuggestionDetailModal({
       setDepartmentFeedback(suggestion.departmentFeedback || "");
       
       // Yapılabilirlik değerlendirmesi
-      setFeasibilityScore(suggestion.feasibilityScore || 0);
+      setFeasibilityScore(suggestion.feasibilityScore ? Number(suggestion.feasibilityScore) : 0);
       setFeasibilityFeedback(suggestion.feasibilityFeedback || "");
       
       // Çözüm önerisi
       setSolutionDescription(suggestion.solutionDescription || "");
       
       // Maliyet değerlendirmesi
-      setCostScore(suggestion.costScore || 0);
+      setCostScore(suggestion.costScore ? Number(suggestion.costScore) : 0);
       setCostDetails(suggestion.costDetails || "");
       
       // Genel müdür değerlendirmesi
@@ -98,7 +98,7 @@ export default function SuggestionDetailModal({
       setReportDetails(suggestion.reportDetails || "");
       
       // Değerlendirme
-      setEvaluationScore(suggestion.evaluationScore || 0);
+      setEvaluationScore(suggestion.evaluationScore ? Number(suggestion.evaluationScore) : 0);
       setEvaluationNotes(suggestion.evaluationNotes || "");
       
       // Ödül bilgilerini sıfırla
@@ -412,30 +412,30 @@ export default function SuggestionDetailModal({
             
             {/* Puanlar ve değerlendirmeler */}
             <div className="grid grid-cols-2 gap-4 mt-4 border-t border-gray-200 pt-4">
-              {suggestion.feasibilityScore && suggestion.feasibilityScore > 0 && (
+              {suggestion.feasibilityScore && Number(suggestion.feasibilityScore) > 0 && (
                 <div>
                   <h5 className="text-sm font-medium text-neutral-700 mb-1">Yapılabilirlik Puanı</h5>
-                  <StarRating value={suggestion.feasibilityScore} readOnly max={5} />
+                  <StarRating value={Number(suggestion.feasibilityScore)} readOnly max={5} />
                   {suggestion.feasibilityFeedback && (
                     <p className="text-sm text-neutral-600 mt-1">{suggestion.feasibilityFeedback}</p>
                   )}
                 </div>
               )}
               
-              {suggestion.costScore && suggestion.costScore > 0 && (
+              {suggestion.costScore && Number(suggestion.costScore) > 0 && (
                 <div>
                   <h5 className="text-sm font-medium text-neutral-700 mb-1">Maliyet Puanı</h5>
-                  <StarRating value={suggestion.costScore} readOnly max={5} />
+                  <StarRating value={Number(suggestion.costScore)} readOnly max={5} />
                   {suggestion.costDetails && (
                     <p className="text-sm text-neutral-600 mt-1">{suggestion.costDetails}</p>
                   )}
                 </div>
               )}
               
-              {suggestion.evaluationScore && suggestion.evaluationScore > 0 && (
+              {suggestion.evaluationScore && Number(suggestion.evaluationScore) > 0 && (
                 <div>
                   <h5 className="text-sm font-medium text-neutral-700 mb-1">Değerlendirme Puanı</h5>
-                  <StarRating value={suggestion.evaluationScore} readOnly max={5} />
+                  <StarRating value={Number(suggestion.evaluationScore)} readOnly max={5} />
                   {suggestion.evaluationNotes && (
                     <p className="text-sm text-neutral-600 mt-1">{suggestion.evaluationNotes}</p>
                   )}
