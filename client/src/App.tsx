@@ -125,8 +125,8 @@ function LoginPage() {
     <div className="min-h-[80vh] flex flex-col md:flex-row items-center justify-center">
       <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
         <div className="text-center mb-6">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-pink-500 bg-clip-text text-transparent mb-1">
-            <span className="text-primary font-extrabold">LAV</span> Kaizen Öneri Sistemi
+          <h1 className="text-3xl font-bold text-primary mb-1">
+            <span className="font-extrabold">LAV</span> Kaizen Öneri Sistemi
           </h1>
           <p className="mt-2 text-gray-600">
             Giriş yaparak önerilerinizi paylaşabilirsiniz
