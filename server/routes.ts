@@ -134,7 +134,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Öneri tipini ve doğrulanmış veriyi birleştir
       const suggestionData = {
         ...validatedData,
-        suggestionType: suggestionType || "kaizen" // Varsayılan olarak kaizen
+        suggestionType: suggestionType || "kaizen", // Varsayılan olarak kaizen
+        // Kıvılcım için farklı başlangıç durumu ayarla
+        status: suggestionType === "kivilcim" 
+          ? SUGGESTION_STATUSES.KIVILCIM_INITIAL_REVIEW 
+          : SUGGESTION_STATUSES.NEW
       };
       
       const suggestion = await storage.createSuggestion(suggestionData);
@@ -224,6 +228,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
           case SUGGESTION_STATUSES.EXECUTIVE_REVIEW:
             updates.executiveReviewedBy = userId;
             updates.executiveReviewedAt = new Date();
+            break;
+          // Kıvılcım süreçleri için durum geçişleri
+          case SUGGESTION_STATUSES.KIVILCIM_INITIAL_REVIEW:
+            updates.kivilcimLeaderId = userId;
+            updates.kivilcimReviewAt = new Date();
+            break;
+          case SUGGESTION_STATUSES.KIVILCIM_COMMITTEE_REVIEW:
+            updates.kivilcimCommitteeReviewAt = new Date();
+            break;
+          case SUGGESTION_STATUSES.KIVILCIM_DIRECTOR_REVIEW:
+            updates.kivilcimDirectorReviewAt = new Date();
+            break;
+          case SUGGESTION_STATUSES.KIVILCIM_RESERVE:
+            updates.isReserved = true;
             break;
         }
         

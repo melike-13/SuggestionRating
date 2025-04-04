@@ -103,6 +103,12 @@ export default function CreateSuggestion() {
         suggestionType: selectedSuggestionType // "kaizen" veya "kivilcim"
       };
       
+      // Kıvılcım için başlangıç statüsünü özel olarak ayarlayabiliriz
+      if (selectedSuggestionType === "kivilcim") {
+        // API tarafında ayarlanacak, burada sadece bilgi olarak ekledik
+        console.log("Kıvılcım önerisi oluşturuluyor, statü KIVILCIM_INITIAL_REVIEW olacak");
+      }
+      
       await apiRequest("POST", "/api/suggestions", suggestionData);
       
       // Öneri listesini hemen güncelle, kullanıcıya yeni önerileri göster
@@ -111,7 +117,9 @@ export default function CreateSuggestion() {
       
       toast({
         title: "Başarılı",
-        description: "Öneriniz başarıyla kaydedildi.",
+        description: selectedSuggestionType === "kaizen" 
+          ? "Kaizen öneriniz başarıyla kaydedildi." 
+          : "Kıvılcım öneriniz başarıyla kaydedildi.",
       });
       
       // Reset form

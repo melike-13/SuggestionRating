@@ -106,9 +106,6 @@ export const suggestions = pgTable("suggestions", {
   implementationEaseScore: integer("implementation_ease_score"), // Uygulanabilme Kolaylığı (%10)
   costBenefitScore: integer("cost_benefit_score"), // Maliyet (%20)
   
-  // Ağırlıklı Hesaplama için Sabitler
-  // Bu alanlar veritabanında saklanmayacak, sadece kod içinde kullanılacak
-  
   // Çözüm önerisi
   solutionDescription: text("solution_description"),
   solutionProposedBy: integer("solution_proposed_by"),
@@ -119,6 +116,24 @@ export const suggestions = pgTable("suggestions", {
   costDetails: text("cost_details"),
   costReviewedBy: integer("cost_reviewed_by"),
   costReviewedAt: timestamp("cost_reviewed_at"),
+  
+  // Kıvılcım için özel alanlar
+  kivilcimLeaderId: integer("kivilcim_leader_id"), // Kıvılcım Lideri (Ön eleme yapan kişi)
+  kivilcimReviewAt: timestamp("kivilcim_review_at"), // Ön eleme tarihi
+  kivilcimFeedback: text("kivilcim_feedback"), // Ön eleme geri bildirimi
+  kivilcimCommitteeReviewAt: timestamp("kivilcim_committee_review_at"), // Kurul değerlendirme tarihi
+  kivilcimCommitteeFeedback: text("kivilcim_committee_feedback"), // Kurul değerlendirme geri bildirimi
+  kivilcimDirectorReviewAt: timestamp("kivilcim_director_review_at"), // Direktör görüşü alma tarihi
+  kivilcimDirectorFeedback: text("kivilcim_director_feedback"), // Direktör geri bildirimi
+  isReserved: boolean("is_reserved").default(false), // Rezerve edilmiş öneri mi?
+  reservationNotes: text("reservation_notes"), // Rezerve edilme nedeni
+  
+  // Maliyet hesaplama detayları (Kıvılcım için)
+  costCalculationDetails: json("cost_calculation_details").$type<{
+    materials: { description: string, amount: number, unitPrice: number, totalPrice: number }[],
+    labor: { description: string, amount: number, unitPrice: number, totalPrice: number }[],
+    other: { description: string, amount: number, unitPrice: number, totalPrice: number }[]
+  }>(),
   
   // Genel Müdür onayı
   executiveReviewedBy: integer("executive_reviewed_by"),
@@ -202,6 +217,18 @@ export const insertSuggestionSchema = createInsertSchema(suggestions).omit({
   costReviewedBy: true,
   costReviewedAt: true,
   
+  // Kıvılcım için özel alanlar
+  kivilcimLeaderId: true,
+  kivilcimReviewAt: true,
+  kivilcimFeedback: true,
+  kivilcimCommitteeReviewAt: true,
+  kivilcimCommitteeFeedback: true,
+  kivilcimDirectorReviewAt: true,
+  kivilcimDirectorFeedback: true,
+  isReserved: true,
+  reservationNotes: true,
+  costCalculationDetails: true,
+  
   // Genel Müdür onayı
   executiveReviewedBy: true,
   executiveReviewedAt: true,
@@ -257,7 +284,7 @@ export type InsertReward = z.infer<typeof insertRewardSchema>;
 
 // Status and Category Constants
 export const SUGGESTION_STATUSES = {
-  NEW: "new", // İlk giriş (Kaizen Formu)
+  NEW: "new", // İlk giriş (Kaizen veya Kıvılcım Formu)
   DEPARTMENT_REVIEW: "department_review", // Bölüm Müdürü incelemesinde
   FEASIBILITY_ASSESSMENT: "feasibility_assessment", // Yapılabilirlik değerlendirmesinde
   FEASIBILITY_REJECTED: "feasibility_rejected", // Yapılabilirlik puanı düşük (< 2.5)
@@ -271,7 +298,13 @@ export const SUGGESTION_STATUSES = {
   COMPLETED: "completed", // Uygulama tamamlandı
   REPORTED: "reported", // Raporlandı
   EVALUATED: "evaluated", // Değerlendirildi
-  REWARDED: "rewarded" // Ödüllendirildi
+  REWARDED: "rewarded", // Ödüllendirildi
+  
+  // Kıvılcım için özel durumlar
+  KIVILCIM_INITIAL_REVIEW: "kivilcim_initial_review", // Kıvılcım Lideri tarafından ön eleme
+  KIVILCIM_COMMITTEE_REVIEW: "kivilcim_committee_review", // Kurul değerlendirmesi
+  KIVILCIM_DIRECTOR_REVIEW: "kivilcim_director_review", // Direktör/Müdür görüşü alma
+  KIVILCIM_RESERVE: "kivilcim_reserve" // Rezerve edilmiş öneri
 } as const;
 
 export const SUGGESTION_CATEGORIES = {
