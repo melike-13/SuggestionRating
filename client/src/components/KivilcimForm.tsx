@@ -46,6 +46,9 @@ const KivilcimForm: React.FC<KivilcimFormProps> = ({
   const [materialsCost, setMaterialsCost] = useState<CostItem[]>([{ description: "", amount: 0, unitPrice: 0, totalPrice: 0 }]);
   const [laborCost, setLaborCost] = useState<CostItem[]>([{ description: "", amount: 0, unitPrice: 0, totalPrice: 0 }]);
   const [otherCost, setOtherCost] = useState<CostItem[]>([{ description: "", amount: 0, unitPrice: 0, totalPrice: 0 }]);
+  
+  // Öneri sahipleri için state (Maksimum 4 kişi)
+  const [suggestionOwners, setSuggestionOwners] = useState<{name: string; role: string; department: string}[]>([]);
 
   // Toplam maliyet hesaplama
   const calculateTotalCost = (items: CostItem[]) => {
@@ -147,21 +150,149 @@ const KivilcimForm: React.FC<KivilcimFormProps> = ({
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <h4 className="font-medium text-sm mb-3">Öneri Sahibi</h4>
+              <h4 className="font-medium text-sm mb-3">Öneri Sahipleri (Maksimum 4 kişi)</h4>
               
               <div className="bg-gray-50 p-3 rounded-md space-y-2">
-                <div className="flex items-center">
-                  <span className="font-medium w-24">Adı-Soyadı:</span>
-                  <span>{currentUser?.displayName || "Belirtilmemiş"}</span>
+                {/* Ana öneri sahibi bilgileri */}
+                <div className="mb-2">
+                  <FormField
+                    control={form.control}
+                    name="submitterName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">Adı-Soyadı:</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Öneri sahibinin adı soyadı" 
+                            {...field} 
+                            className="h-8 text-sm" 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
-                <div className="flex items-center">
-                  <span className="font-medium w-24">Sicil No:</span>
-                  <span>{currentUser?.username || "Belirtilmemiş"}</span>
+                
+                <div className="mb-2">
+                  <FormField
+                    control={form.control}
+                    name="submitterRole"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">Görevi:</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Öneri sahibinin görevi/pozisyonu" 
+                            {...field} 
+                            className="h-8 text-sm" 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
-                <div className="flex items-center">
-                  <span className="font-medium w-24">Departman:</span>
-                  <span>{currentUser?.department || "Belirtilmemiş"}</span>
+                
+                <div className="mb-2">
+                  <FormField
+                    control={form.control}
+                    name="submitterDepartment"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs">Bölümü:</FormLabel>
+                        <FormControl>
+                          <Input 
+                            placeholder="Öneri sahibinin bölümü/departmanı" 
+                            {...field} 
+                            className="h-8 text-sm" 
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
+                
+                {/* Ek öneri sahipleri */}
+                {suggestionOwners.map((owner, index) => (
+                  <div key={index} className="mt-4 pt-4 border-t border-gray-200">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-xs font-medium">{index + 2}. Öneri Sahibi</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="h-6 w-6 p-0"
+                        onClick={() => {
+                          const newOwners = [...suggestionOwners];
+                          newOwners.splice(index, 1);
+                          setSuggestionOwners(newOwners);
+                        }}
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 gap-2">
+                      <div className="mb-2">
+                        <Input 
+                          placeholder="Öneri sahibinin adı soyadı" 
+                          value={owner.name}
+                          onChange={(e) => {
+                            const newOwners = [...suggestionOwners];
+                            newOwners[index].name = e.target.value;
+                            setSuggestionOwners(newOwners);
+                          }}
+                          className="h-8 text-sm" 
+                        />
+                      </div>
+                      
+                      <div className="mb-2 grid grid-cols-2 gap-2">
+                        <Input 
+                          placeholder="Görevi" 
+                          value={owner.role}
+                          onChange={(e) => {
+                            const newOwners = [...suggestionOwners];
+                            newOwners[index].role = e.target.value;
+                            setSuggestionOwners(newOwners);
+                          }}
+                          className="h-8 text-sm" 
+                        />
+                        
+                        <Input 
+                          placeholder="Bölümü" 
+                          value={owner.department}
+                          onChange={(e) => {
+                            const newOwners = [...suggestionOwners];
+                            newOwners[index].department = e.target.value;
+                            setSuggestionOwners(newOwners);
+                          }}
+                          className="h-8 text-sm" 
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ))}
+                
+                {/* Öneri Sahibi Ekle Butonu */}
+                {suggestionOwners.length < 3 && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="mt-2 w-full text-xs"
+                    onClick={() => {
+                      setSuggestionOwners([
+                        ...suggestionOwners,
+                        { name: "", role: "", department: "" }
+                      ]);
+                    }}
+                  >
+                    <PlusCircle className="h-3 w-3 mr-1" />
+                    Öneri Sahibi Ekle
+                  </Button>
+                )}
               </div>
             </div>
             

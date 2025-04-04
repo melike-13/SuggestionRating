@@ -30,6 +30,12 @@ import KivilcimForm from "@/components/KivilcimForm";
 
 // Genişletilmiş form şeması
 const formSchema = extendedInsertSuggestionSchema.omit({ submittedBy: true }).extend({
+  // Öneri sahibi bilgileri için ortak alanlar
+  submitterName: z.string().optional(),
+  submitterRole: z.string().optional(),
+  submitterDepartment: z.string().optional(),
+  
+  // Kıvılcım formu için ek alanlar
   internalConsultant: z.string().optional(),
   costCalculationDetails: z.object({
     materials: z.array(z.object({
@@ -320,13 +326,73 @@ export default function CreateSuggestion() {
                 <CardContent className="pt-6">
                   <h3 className="text-lg font-semibold mb-4">2. Ekip Bilgileri</h3>
                   
+                  {/* Öneri sahibi bilgileri - manuel giriş */}
+                  <div className="bg-gray-50 p-4 rounded-md mb-4">
+                    <h4 className="font-medium text-sm mb-3">Öneri Sahibi</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <FormField
+                        control={form.control}
+                        name="submitterName"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">Adı-Soyadı:</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="Öneri sahibinin adı soyadı" 
+                                {...field} 
+                                className="h-8 text-sm" 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="submitterRole"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">Görevi:</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="Öneri sahibinin görevi/pozisyonu" 
+                                {...field} 
+                                className="h-8 text-sm" 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      
+                      <FormField
+                        control={form.control}
+                        name="submitterDepartment"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel className="text-xs">Bölümü:</FormLabel>
+                            <FormControl>
+                              <Input 
+                                placeholder="Öneri sahibinin bölümü/departmanı" 
+                                {...field} 
+                                className="h-8 text-sm" 
+                              />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    </div>
+                  </div>
+                  
                   <div className="space-y-4">
                     <FormField
                       control={form.control}
                       name="teamMembers"
                       render={({ field }) => (
                         <FormItem className="space-y-2">
-                          <FormLabel>Ekip Üyeleri (Maksimum 4 kişi)</FormLabel>
+                          <FormLabel>Ekip Üyeleri {form.watch("kaizenType") === KAIZEN_TYPES.KOBETSU ? "(Maksimum 4 kişi + 1 Proje Lideri)" : "(Maksimum 3 kişi)"}</FormLabel>
                           <FormControl>
                             <div className="space-y-2">
                               {teamMembers.map((member, index) => (
@@ -350,7 +416,7 @@ export default function CreateSuggestion() {
                                 </div>
                               ))}
                               
-                              {teamMembers.length < 4 && (
+                              {(form.watch("kaizenType") === KAIZEN_TYPES.KOBETSU ? teamMembers.length < 4 : teamMembers.length < 3) && (
                                 <Button
                                   type="button"
                                   variant="outline"
