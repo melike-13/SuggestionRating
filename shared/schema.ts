@@ -5,9 +5,11 @@ import { z } from "zod";
 // Users table for authentication and tracking who submitted suggestions
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
+  username: text("username").notNull().unique(), // Sicil numarası için kullanacağız
   password: text("password").notNull(),
   displayName: text("display_name").notNull(),
+  role: text("role").notNull().default("employee"), // "employee", "manager", "executive" değerleri alabilir
+  department: text("department"), // kullanıcının bölümü (opsiyonel)
   isAdmin: boolean("is_admin").notNull().default(false),
 });
 
@@ -15,8 +17,17 @@ export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
   displayName: true,
+  role: true,
+  department: true,
   isAdmin: true,
 });
+
+// Kullanıcı rolleri
+export const USER_ROLES = {
+  EMPLOYEE: "employee",
+  MANAGER: "manager",
+  EXECUTIVE: "executive"
+};
 
 // Kaizen suggestions table
 export const suggestions = pgTable("suggestions", {

@@ -2,7 +2,7 @@ import {
   users, type User, type InsertUser,
   suggestions, type Suggestion, type InsertSuggestion,
   rewards, type Reward, type InsertReward,
-  SUGGESTION_STATUSES
+  SUGGESTION_STATUSES, USER_ROLES
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
@@ -58,26 +58,41 @@ export class DatabaseStorage implements IStorage {
   }
 
   private async seedDefaultUsers() {
-    // Admin kullanıcı var mı kontrol et
-    const adminUser = await this.getUserByUsername("admin");
-    if (!adminUser) {
-      // Admin kullanıcı yoksa oluştur
+    // Genel Müdür (sicil no: 1001)
+    const executiveUser = await this.getUserByUsername("1001");
+    if (!executiveUser) {
       await this.createUser({
-        username: "admin",
+        username: "1001",
         password: "admin123",
-        displayName: "Administrator",
+        displayName: "Genel Müdür",
+        role: USER_ROLES.EXECUTIVE,
+        department: "Yönetim",
         isAdmin: true
       });
     }
     
-    // Normal kullanıcı var mı kontrol et
-    const employeeUser = await this.getUserByUsername("employee");
-    if (!employeeUser) {
-      // Normal kullanıcı yoksa oluştur
+    // Bölüm Müdürü (sicil no: 2001)
+    const managerUser = await this.getUserByUsername("2001");
+    if (!managerUser) {
       await this.createUser({
-        username: "employee",
+        username: "2001",
+        password: "manager123",
+        displayName: "Bölüm Müdürü",
+        role: USER_ROLES.MANAGER,
+        department: "Üretim",
+        isAdmin: false
+      });
+    }
+    
+    // Normal çalışan (sicil no: 3001)
+    const employeeUser = await this.getUserByUsername("3001");
+    if (!employeeUser) {
+      await this.createUser({
+        username: "3001",
         password: "employee123",
-        displayName: "Test Employee",
+        displayName: "Test Çalışan",
+        role: USER_ROLES.EMPLOYEE,
+        department: "Üretim",
         isAdmin: false
       });
     }

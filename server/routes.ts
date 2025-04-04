@@ -8,7 +8,8 @@ import {
   insertSuggestionSchema, 
   extendedInsertSuggestionSchema, 
   extendedInsertRewardSchema, 
-  SUGGESTION_STATUSES
+  SUGGESTION_STATUSES,
+  USER_ROLES
 } from "@shared/schema";
 import { fromZodError } from "zod-validation-error";
 
@@ -77,6 +78,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     res.status(403).json({ message: "Not authorized" });
   };
+  
+  const hasRole = (roles: string[]) => {
+    return (req: Request, res: Response, next: Function) => {
+      if (req.isAuthenticated()) {
+        const userRole = (req.user as any).role;
+        if (roles.includes(userRole)) {
+          return next();
+        }
+      }
+      res.status(403).json({ message: "Not authorized" });
+    };
+  };
+  
+  // Role-based middlewares
+  const isManager = hasRole([USER_ROLES.MANAGER, USER_ROLES.EXECUTIVE]);
+  const isExecutive = hasRole([USER_ROLES.EXECUTIVE]);
 
   // Authentication routes
   app.post("/api/auth/login", passport.authenticate("local"), (req, res) => {

@@ -69,7 +69,7 @@ function App() {
 }
 
 function LoginPage() {
-  const [username, setUsername] = useState("");
+  const [employeeId, setEmployeeId] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [, setLocation] = useLocation();
@@ -84,7 +84,7 @@ function LoginPage() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ username, password }),
+        body: JSON.stringify({ username: employeeId, password }), // username parametresi sicil no için kullanılıyor
         credentials: "include",
       });
 
@@ -94,10 +94,10 @@ function LoginPage() {
         window.location.href = "/"; // Sayfayı tamamen yeniden yükle
       } else {
         const data = await response.json();
-        setError(data.message || "Login failed");
+        setError(data.message || "Giriş başarısız");
       }
     } catch (err: any) {
-      setError(err.message || "An unexpected error occurred");
+      setError(err.message || "Beklenmeyen bir hata oluştu");
     }
   };
 
@@ -120,19 +120,20 @@ function LoginPage() {
         <form onSubmit={handleLogin} className="mt-8 space-y-6">
           <div>
             <label
-              htmlFor="username"
+              htmlFor="employeeId"
               className="block text-sm font-medium text-gray-700"
             >
-              Kullanıcı Adı
+              Sicil Numarası
             </label>
             <input
-              id="username"
-              name="username"
+              id="employeeId"
+              name="employeeId"
               type="text"
               required
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              value={employeeId}
+              onChange={(e) => setEmployeeId(e.target.value)}
               className="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-primary"
+              placeholder="Sicil numaranızı girin"
             />
           </div>
 
@@ -164,8 +165,9 @@ function LoginPage() {
           </div>
 
           <div className="text-sm text-center text-gray-500">
-            <p>Kullanıcı adı: admin, Şifre: admin123 (Yönetici)</p>
-            <p>Kullanıcı adı: employee, Şifre: employee123 (Çalışan)</p>
+            <p>Sicil No: 1001, Şifre: admin123 (Genel Müdür)</p>
+            <p>Sicil No: 2001, Şifre: manager123 (Bölüm Müdürü)</p>
+            <p>Sicil No: 3001, Şifre: employee123 (Çalışan)</p>
           </div>
         </form>
       </div>
