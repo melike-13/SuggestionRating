@@ -1,0 +1,45 @@
+[16:49:13.549] Cloning github.com/melike-13/Oneri-Sistemi (Branch: main, Commit: d8afe39)
+[16:49:14.442] Cloning completed: 891.000ms
+[16:49:14.684] Restored build cache from previous deployment (6fWgqEhgZVCpZwXmDoRdtfYPi9br)
+[16:49:14.796] Running build in Washington, D.C., USA (East) – iad1
+[16:49:15.311] Running "vercel build"
+[16:49:15.680] Vercel CLI 41.4.1
+[16:49:16.403] Running "install" command: `npm install`...
+[16:49:19.887] 
+[16:49:19.888] up to date, audited 495 packages in 3s
+[16:49:19.888] 
+[16:49:19.889] 61 packages are looking for funding
+[16:49:19.889]   run `npm fund` for details
+[16:49:19.918] 
+[16:49:19.919] 8 moderate severity vulnerabilities
+[16:49:19.919] 
+[16:49:19.919] To address issues that do not require attention, run:
+[16:49:19.920]   npm audit fix
+[16:49:19.920] 
+[16:49:19.920] To address all issues (including breaking changes), run:
+[16:49:19.920]   npm audit fix --force
+[16:49:19.920] 
+[16:49:19.921] Run `npm audit` for details.
+[16:49:20.864] [36mvite v5.4.14 [32mbuilding for production...[36m[39m
+[16:49:20.923] transforming...
+[16:49:21.297] Browserslist: browsers data (caniuse-lite) is 6 months old. Please run:
+[16:49:21.297]   npx update-browserslist-db@latest
+[16:49:21.298]   Why you should do it regularly: https://github.com/browserslist/update-db#readme
+[16:49:26.396] [32m✓[39m 2149 modules transformed.
+[16:49:27.506] rendering chunks...
+[16:49:27.522] computing gzip size...
+[16:49:27.542] [2m../dist/public/[22m[32mindex.html                 [39m[1m[2m  1.85 kB[22m[1m[22m[2m │ gzip:   0.76 kB[22m
+[16:49:27.542] [2m../dist/public/[22m[2massets/[22m[35mindex-CFbYYfVI.css  [39m[1m[2m 64.29 kB[22m[1m[22m[2m │ gzip:  11.08 kB[22m
+[16:49:27.546] [2m../dist/public/[22m[2massets/[22m[36mindex-SDBa5eVf.js   [39m[1m[33m583.74 kB[39m[22m[2m │ gzip: 171.69 kB[22m
+[16:49:27.547] [33m
+[16:49:27.547] (!) Some chunks are larger than 500 kB after minification. Consider:
+[16:49:27.547] - Using dynamic import() to code-split the application
+[16:49:27.547] - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+[16:49:27.548] - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.[39m
+[16:49:27.548] [32m✓ built in 6.65s[39m
+[16:49:27.637] Build Completed in /vercel/output [11s]
+[16:49:27.743] Deploying outputs...
+[16:49:28.719] 
+[16:49:28.992] Deployment completed
+[16:49:43.274] Uploading build cache [79.09 MB]...
+[16:49:44.506] Build cache uploaded: 1.233s

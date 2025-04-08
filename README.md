@@ -2,6 +2,31 @@
 
 Bu proje, şirket çalışanlarının Kaizen ve Kıvılcım adı verilen iki farklı türde iyileştirme önerilerini sunmaları, değerlendirmeleri ve ödüllendirmeleri için geliştirilmiş bir web uygulamasıdır.
 
+## Supabase Veritabanı Kurulumu
+
+### 1. Supabase'de Veritabanı Oluşturma
+- Supabase.com'da bir hesap oluşturun
+- Yeni bir proje oluşturun
+- PostgreSQL veritabanı otomatik olarak oluşturulacaktır
+
+### 2. Vercel'e Veritabanı Bilgilerini Ekleme
+Vercel'de dağıtım sırasında aşağıdaki çevre değişkenlerini ayarlayın:
+
+```
+DATABASE_URL=postgresql://postgres:[YOUR_PASSWORD]@db.[YOUR_PROJECT_ID].supabase.co:5432/postgres
+SUPABASE_URL=https://[YOUR_PROJECT_ID].supabase.co
+SUPABASE_ANON_KEY=[YOUR_ANON_KEY]
+JWT_SECRET=[CHOOSE_A_SECRET_KEY]
+SESSION_SECRET=[CHOOSE_A_SESSION_KEY]
+```
+
+### 3. Veritabanı Şeması Dağıtımı
+Uygulama ilk defa başlatıldığında otomatik olarak tabloları oluşturacaktır. Eğer manuel olarak oluşturmak isterseniz:
+
+```
+npm run db:push
+```
+
 ## Genel Bakış
 
 Bu uygulama, çalışanların iyileştirme önerilerini kolayca oluşturabilmesi, yöneticilerin bu önerileri değerlendirebilmesi ve süreç boyunca şeffaf bir iletişim sağlanması amacıyla tasarlanmıştır.
