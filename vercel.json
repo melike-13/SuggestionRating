@@ -9,28 +9,29 @@
       "use": "@vercel/node"
     },
     {
-      "src": "client/package.json",
-      "use": "@vercel/static-build",
-      "config": {
-        "distDir": "dist"
-      }
+      "src": "client/dist/**",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
       "src": "/api/auth/(.*)",
-      "dest": "/api/auth/$1"
+      "dest": "/api/auth/$1.ts"
+    },
+    {
+      "src": "/api/suggestions/([0-9]+)",
+      "dest": "/api/suggestions/[id].ts?id=$1"
     },
     {
       "src": "/api/suggestions/(.*)",
-      "dest": "/api/suggestions/$1"
+      "dest": "/api/suggestions/$1.ts"
     },
     {
       "src": "/api/stats/(.*)",
-      "dest": "/api/stats/$1"
+      "dest": "/api/stats/$1.ts"
     },
     {
-      "src": "/api/(.*)",
+      "src": "/api(/?.*)",
       "dest": "/api/index.ts"
     },
     {
@@ -38,7 +39,7 @@
     },
     {
       "src": "/(.*)",
-      "dest": "/index.html"
+      "dest": "/client/dist/index.html"
     }
   ],
   "env": {

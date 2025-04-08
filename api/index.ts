@@ -14,7 +14,7 @@ import {
   sendStatusChangeNotification,
   sendRewardNotification
 } from '../server/notifications';
-import { generateSessionToken, verifySessionToken, SessionData } from './auth/session';
+import { generateSessionToken, verifySessionToken, SessionData } from '../api/auth/session';
 
 // Yanıt tipleri
 type ResponseData = {
