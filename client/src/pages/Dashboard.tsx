@@ -1,3 +1,4 @@
+// Dashboard.tsx
 import { useQuery } from "@tanstack/react-query";
 import TabNavigation from "@/components/TabNavigation";
 import StatCard from "@/components/StatCard";
@@ -12,60 +13,35 @@ export default function Dashboard() {
   const { toast } = useToast();
   const [selectedSuggestion, setSelectedSuggestion] = useState<Suggestion | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
-  
-  // Get current user
-  const { data: userData } = useQuery<{ user: User | null }>({ 
+
+  const { data: userData } = useQuery<{ user: User | null }>({
     queryKey: ['/api/auth/user'],
   });
-  
+
   const currentUser = userData?.user || null;
-  
-  // Fetch statistics
-  const { data: statsData, isLoading: isStatsLoading } = useQuery<{ 
-    total: number; 
+
+  const { data: statsData, isLoading: isStatsLoading } = useQuery<{
+    total: number;
     byStatus: Record<string, number>;
   }>({
     queryKey: ['/api/stats/suggestions'],
-    onError: (error: any) => {
-      toast({
-        title: "Hata",
-        description: error.message || "İstatistikler yüklenirken bir hata oluştu",
-        variant: "destructive",
-      });
-    }
   });
-  
-  // Fetch suggestions
+
   const { data: suggestionsData, isLoading: isSuggestionsLoading } = useQuery<Suggestion[]>({
     queryKey: ['/api/suggestions'],
-    onError: (error: any) => {
-      toast({
-        title: "Hata",
-        description: error.message || "Öneriler yüklenirken bir hata oluştu",
-        variant: "destructive",
-      });
-    }
   });
-  
-  // Fetch top contributors
+
   const { data: contributorsData, isLoading: isContributorsLoading } = useQuery<{
     user: User | null;
     count: number;
   }[]>({
     queryKey: ['/api/stats/top-contributors'],
-    onError: (error: any) => {
-      toast({
-        title: "Hata",
-        description: error.message || "Katkı sağlayanlar yüklenirken bir hata oluştu",
-        variant: "destructive",
-      });
-    }
   });
-  
+
   const formatDate = (date: Date | string) => {
     return format(new Date(date), "dd.MM.yyyy");
   };
-  
+
   const getStatusLabel = (status: string) => {
     switch (status) {
       case SUGGESTION_STATUSES.NEW:
@@ -82,7 +58,7 @@ export default function Dashboard() {
         return status;
     }
   };
-  
+
   const getStatusClass = (status: string) => {
     switch (status) {
       case SUGGESTION_STATUSES.NEW:
@@ -99,32 +75,29 @@ export default function Dashboard() {
         return "bg-gray-500";
     }
   };
-  
+
   const handleViewSuggestion = (suggestion: Suggestion) => {
     setSelectedSuggestion(suggestion);
     setModalOpen(true);
   };
-  
-  // Get recent suggestions (last 5)
-  const recentSuggestions = suggestionsData 
-    ? [...suggestionsData].sort((a, b) => 
-        new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime()
-      ).slice(0, 5)
+
+  const recentSuggestions = suggestionsData
+    ? [...suggestionsData]
+        .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())
+        .slice(0, 5)
     : [];
-  
+
   return (
     <div className="mb-8">
       <TabNavigation activeTab="dashboard" user={currentUser} />
-      
+
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-neutral-900">Dashboard</h2>
         <p className="text-neutral-700">Kaizen iyileştirme önerileri sistemi genel bakış</p>
       </div>
-      
-      {/* Statistics Cards */}
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {isStatsLoading ? (
-          // Skeleton loading state
           Array(4).fill(0).map((_, index) => (
             <div key={index} className="bg-white rounded-lg shadow p-6">
               <div className="flex items-start justify-between">
@@ -138,34 +111,14 @@ export default function Dashboard() {
           ))
         ) : (
           <>
-            <StatCard 
-              title="Toplam Öneri" 
-              value={statsData?.total || 0} 
-              icon="lightbulb" 
-            />
-            <StatCard 
-              title="İnceleme Altında" 
-              value={statsData?.byStatus[SUGGESTION_STATUSES.REVIEW] || 0} 
-              icon="hourglass_top" 
-              iconColor="text-yellow-500"
-            />
-            <StatCard 
-              title="Onaylanan" 
-              value={statsData?.byStatus[SUGGESTION_STATUSES.APPROVED] || 0} 
-              icon="check_circle" 
-              iconColor="text-green-500"
-            />
-            <StatCard 
-              title="Uygulanan" 
-              value={statsData?.byStatus[SUGGESTION_STATUSES.IMPLEMENTED] || 0} 
-              icon="rocket_launch" 
-              iconColor="text-primary"
-            />
+            <StatCard title="Toplam Öneri" value={statsData?.total || 0} icon="lightbulb" />
+            <StatCard title="İnceleme Altında" value={statsData?.byStatus?.[SUGGESTION_STATUSES.REVIEW] || 0} icon="hourglass_top" iconColor="text-yellow-500" />
+            <StatCard title="Onaylanan" value={statsData?.byStatus?.[SUGGESTION_STATUSES.APPROVED] || 0} icon="check_circle" iconColor="text-green-500" />
+            <StatCard title="Uygulanan" value={statsData?.byStatus?.[SUGGESTION_STATUSES.IMPLEMENTED] || 0} icon="rocket_launch" iconColor="text-primary" />
           </>
         )}
       </div>
-      
-      {/* Recent Suggestions */}
+
       <div className="bg-white rounded-lg shadow mb-8">
         <div className="p-6 border-b border-neutral-200">
           <h3 className="text-lg font-bold text-neutral-900">Son Öneriler</h3>
@@ -184,7 +137,6 @@ export default function Dashboard() {
               </thead>
               <tbody>
                 {isSuggestionsLoading ? (
-                  // Skeleton loading state for table
                   Array(3).fill(0).map((_, index) => (
                     <tr key={index} className="border-b border-neutral-200">
                       <td className="px-4 py-3"><Skeleton className="h-4 w-40" /></td>
@@ -206,10 +158,7 @@ export default function Dashboard() {
                       </td>
                       <td className="px-4 py-3 text-sm text-neutral-900">{formatDate(suggestion.submittedAt)}</td>
                       <td className="px-4 py-3">
-                        <button 
-                          className="text-blue-500 hover:text-primary"
-                          onClick={() => handleViewSuggestion(suggestion)}
-                        >
+                        <button className="text-blue-500 hover:text-primary" onClick={() => handleViewSuggestion(suggestion)}>
                           <span className="material-icons">visibility</span>
                         </button>
                       </td>
@@ -217,9 +166,7 @@ export default function Dashboard() {
                   ))
                 ) : (
                   <tr className="border-b border-neutral-200">
-                    <td colSpan={5} className="px-4 py-3 text-center text-sm text-neutral-700">
-                      Henüz öneri bulunmamaktadır.
-                    </td>
+                    <td colSpan={5} className="px-4 py-3 text-center text-sm text-neutral-700">Henüz öneri bulunmamaktadır.</td>
                   </tr>
                 )}
               </tbody>
@@ -227,8 +174,7 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-      
-      {/* Top Contributors */}
+
       <div className="bg-white rounded-lg shadow">
         <div className="p-6 border-b border-neutral-200">
           <h3 className="text-lg font-bold text-neutral-900">En Aktif Katkı Sağlayanlar</h3>
@@ -236,7 +182,6 @@ export default function Dashboard() {
         <div className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {isContributorsLoading ? (
-              // Skeleton loading state
               Array(4).fill(0).map((_, index) => (
                 <div key={index} className="flex items-center space-x-3">
                   <Skeleton className="h-8 w-8 rounded-full" />
@@ -264,8 +209,7 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-      
-      {/* Detail Modal */}
+
       <SuggestionDetailModal
         open={modalOpen}
         onOpenChange={setModalOpen}
