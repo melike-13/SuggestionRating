@@ -20,7 +20,15 @@ const nextConfig = {
     // Vercel'da eslint kontrolünü devre dışı bırak
     ignoreDuringBuilds: true,
   },
-  distDir: 'client/.next',
+  distDir: '.next',
+  experimental: {
+    esmExternals: true,
+  },
+  webpack: (config) => {
+    // ESModules için yapılandırma
+    config.experiments = { ...config.experiments, topLevelAwait: true };
+    return config;
+  }
 };
 
-module.exports = nextConfig;
+export default nextConfig;

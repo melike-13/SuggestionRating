@@ -1,51 +1,51 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
-  "devCommand": "npm run dev",
-  "installCommand": "npm install",
   "builds": [
     {
       "src": "api/**/*.ts",
       "use": "@vercel/node"
-    },
-    {
-      "src": "client/dist/**",
-      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
-      "src": "/api/auth/(.*)",
-      "dest": "/api/auth/$1.ts"
+      "src": "/api/test",
+      "dest": "/api/test.ts"
+    },
+    {
+      "src": "/api/auth/login",
+      "dest": "/api/auth/login.ts"
+    },
+    {
+      "src": "/api/auth/logout",
+      "dest": "/api/auth/logout.ts"
+    },
+    {
+      "src": "/api/auth/user",
+      "dest": "/api/auth/user.ts"
+    },
+    {
+      "src": "/api/suggestions",
+      "dest": "/api/suggestions/index.ts"
+    },
+    {
+      "src": "/api/suggestions/user",
+      "dest": "/api/suggestions/user.ts"
     },
     {
       "src": "/api/suggestions/([0-9]+)",
       "dest": "/api/suggestions/[id].ts?id=$1"
     },
     {
-      "src": "/api/suggestions/(.*)",
-      "dest": "/api/suggestions/$1.ts"
+      "src": "/api/stats/suggestions",
+      "dest": "/api/stats/suggestions.ts"
     },
     {
-      "src": "/api/stats/(.*)",
-      "dest": "/api/stats/$1.ts"
+      "src": "/api/stats/top-contributors",
+      "dest": "/api/stats/top-contributors.ts"
     },
     {
-      "src": "/api(/?.*)",
+      "src": "/api/(.*)",
       "dest": "/api/index.ts"
-    },
-    {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/client/dist/index.html"
     }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  },
-  "github": {
-    "silent": true
-  }
+  ]
 }
