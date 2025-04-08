@@ -1,0 +1,128 @@
+[15:11:36.968] Cloning github.com/melike-13/SuggestionRating (Branch: main, Commit: 5945c5b)
+[15:11:36.976] Skipping build cache, deployment was triggered without cache.
+[15:11:37.947] Cloning completed: 979.000ms
+[15:11:38.186] Running build in Washington, D.C., USA (East) – iad1
+[15:11:38.335] Running "vercel build"
+[15:11:38.696] Vercel CLI 41.4.1
+[15:11:38.800] WARN! Due to `builds` existing in your configuration file, the Build and Development Settings defined in your Project Settings will not apply. Learn More: https://vercel.link/unused-build-settings
+[15:11:39.310] Installing dependencies...
+[15:11:44.039] npm warn deprecated @esbuild-kit/core-utils@3.3.2: Merged into tsx: https://tsx.is
+[15:11:44.070] npm warn deprecated @esbuild-kit/esm-loader@2.6.5: Merged into tsx: https://tsx.is
+[15:11:54.609] 
+[15:11:54.609] added 543 packages in 15s
+[15:11:54.610] 
+[15:11:54.610] 67 packages are looking for funding
+[15:11:54.610]   run `npm fund` for details
+[15:11:54.850] Using TypeScript 5.6.3 (local user-provided)
+[15:11:59.153] Using TypeScript 5.6.3 (local user-provided)
+[15:12:00.106] api/index.ts(6,3): error TS2305: Module '"../shared/schema"' has no exported member 'SUGGESTION_STATUSES'.
+[15:12:00.106] api/index.ts(7,3): error TS2305: Module '"../shared/schema"' has no exported member 'insertSuggestionSchema'.
+[15:12:00.107] api/index.ts(9,3): error TS2724: '"../shared/schema"' has no exported member named 'insertRewardSchema'. Did you mean 'insertUserSchema'?
+[15:12:00.107] api/index.ts(10,3): error TS2305: Module '"../shared/schema"' has no exported member 'extendedInsertSuggestionSchema'.
+[15:12:00.107] 
+[15:12:01.268] server/storage.ts(2,15): error TS2724: '"@shared/schema"' has no exported member named 'User'. Did you mean 'users'?
+[15:12:01.269] server/storage.ts(2,26): error TS2305: Module '"@shared/schema"' has no exported member 'InsertUser'.
+[15:12:01.269] server/storage.ts(3,21): error TS2724: '"@shared/schema"' has no exported member named 'Suggestion'. Did you mean 'suggestions'?
+[15:12:01.269] server/storage.ts(3,38): error TS2305: Module '"@shared/schema"' has no exported member 'InsertSuggestion'.
+[15:12:01.269] server/storage.ts(4,17): error TS2724: '"@shared/schema"' has no exported member named 'Reward'. Did you mean 'rewards'?
+[15:12:01.270] server/storage.ts(4,30): error TS2305: Module '"@shared/schema"' has no exported member 'InsertReward'.
+[15:12:01.270] server/storage.ts(5,3): error TS2305: Module '"@shared/schema"' has no exported member 'SUGGESTION_STATUSES'.
+[15:12:01.270] 
+[15:12:01.309] server/notifications.ts(1,10): error TS2724: '"@shared/schema"' has no exported member named 'Suggestion'. Did you mean 'suggestions'?
+[15:12:01.309] server/notifications.ts(1,22): error TS2724: '"@shared/schema"' has no exported member named 'User'. Did you mean 'users'?
+[15:12:01.309] 
+[15:12:01.465] server/vite.ts(39,5): error TS2322: Type '{ middlewareMode: boolean; hmr: { server: Server<typeof IncomingMessage, typeof ServerResponse>; }; allowedHosts: boolean; }' is not assignable to type 'ServerOptions'.
+[15:12:01.465]   Types of property 'allowedHosts' are incompatible.
+[15:12:01.466]     Type 'boolean' is not assignable to type 'true | string[] | undefined'.
+[15:12:01.466] 
+[15:12:16.028] client/src/App.tsx(15,10): error TS2724: '"@shared/schema"' has no exported member named 'User'. Did you mean 'users'?
+[15:12:16.028] 
+[15:12:16.806] client/src/components/FeasibilityAssessmentForm.tsx(16,10): error TS2305: Module '"@shared/schema"' has no exported member 'FEASIBILITY_WEIGHTS'.
+[15:12:16.806] client/src/components/FeasibilityAssessmentForm.tsx(16,31): error TS2305: Module '"@shared/schema"' has no exported member 'FEASIBILITY_THRESHOLDS'.
+[15:12:16.806] client/src/components/FeasibilityAssessmentForm.tsx(16,60): error TS2724: '"@shared/schema"' has no exported member named 'Suggestion'. Did you mean 'suggestions'?
+[15:12:16.806] client/src/components/FeasibilityAssessmentForm.tsx(93,84): error TS18046: 'sum' is of type 'unknown'.
+[15:12:16.806] client/src/components/FeasibilityAssessmentForm.tsx(93,90): error TS18046: 'weight' is of type 'unknown'.
+[15:12:16.806] client/src/components/FeasibilityAssessmentForm.tsx(98,38): error TS18046: 'totalWeight' is of type 'unknown'.
+[15:12:16.806] client/src/components/FeasibilityAssessmentForm.tsx(231,16): error TS2322: Type 'string | number | symbol' is not assignable to type 'Key | null | undefined'.
+[15:12:16.806]   Type 'symbol' is not assignable to type 'Key | null | undefined'.
+[15:12:16.806] 
+[15:12:16.925] client/src/components/Header.tsx(2,10): error TS2724: '"@shared/schema"' has no exported member named 'User'. Did you mean 'users'?
+[15:12:16.925] 
+[15:12:17.504] client/src/components/KivilcimForm.tsx(18,10): error TS2724: '"@shared/schema"' has no exported member named 'User'. Did you mean 'users'?
+[15:12:17.505] 
+[15:12:18.157] client/src/components/SuggestionDetailModal.tsx(9,10): error TS2724: '"@shared/schema"' has no exported member named 'Suggestion'. Did you mean 'suggestions'?
+[15:12:18.158] client/src/components/SuggestionDetailModal.tsx(9,22): error TS2724: '"@shared/schema"' has no exported member named 'User'. Did you mean 'users'?
+[15:12:18.158] client/src/components/SuggestionDetailModal.tsx(9,28): error TS2305: Module '"@shared/schema"' has no exported member 'SUGGESTION_STATUSES'.
+[15:12:18.158] client/src/components/SuggestionDetailModal.tsx(9,49): error TS2305: Module '"@shared/schema"' has no exported member 'REWARD_TYPES'.
+[15:12:18.158] 
+[15:12:18.195] client/src/components/TabNavigation.tsx(2,10): error TS2724: '"@shared/schema"' has no exported member named 'User'. Did you mean 'users'?
+[15:12:18.195] 
+[15:12:20.568] client/src/pages/AdminPanel.tsx(3,10): error TS2724: '"@shared/schema"' has no exported member named 'Suggestion'. Did you mean 'suggestions'?
+[15:12:20.569] client/src/pages/AdminPanel.tsx(3,22): error TS2724: '"@shared/schema"' has no exported member named 'User'. Did you mean 'users'?
+[15:12:20.569] client/src/pages/AdminPanel.tsx(3,28): error TS2305: Module '"@shared/schema"' has no exported member 'SUGGESTION_STATUSES'.
+[15:12:20.569] client/src/pages/AdminPanel.tsx(3,49): error TS2724: '"@shared/schema"' has no exported member named 'Reward'. Did you mean 'rewards'?
+[15:12:20.571] client/src/pages/AdminPanel.tsx(34,5): error TS2769: No overload matches this call.
+[15:12:20.571]   Overload 1 of 3, '(options: DefinedInitialDataOptions<Suggestion[], Error, Suggestion[], QueryKey>, queryClient?: QueryClient | undefined): DefinedUseQueryResult<Suggestion[], Error>', gave the following error.
+[15:12:20.571]     Object literal may only specify known properties, and 'onError' does not exist in type 'DefinedInitialDataOptions<Suggestion[], Error, Suggestion[], QueryKey>'.
+[15:12:20.573]   Overload 2 of 3, '(options: UndefinedInitialDataOptions<Suggestion[], Error, Suggestion[], QueryKey>, queryClient?: QueryClient | undefined): UseQueryResult<Suggestion[], Error>', gave the following error.
+[15:12:20.573]     Object literal may only specify known properties, and 'onError' does not exist in type 'UndefinedInitialDataOptions<Suggestion[], Error, Suggestion[], QueryKey>'.
+[15:12:20.574]   Overload 3 of 3, '(options: UseQueryOptions<Suggestion[], Error, Suggestion[], QueryKey>, queryClient?: QueryClient | undefined): UseQueryResult<Suggestion[], Error>', gave the following error.
+[15:12:20.574]     Object literal may only specify known properties, and 'onError' does not exist in type 'UseQueryOptions<Suggestion[], Error, Suggestion[], QueryKey>'.
+[15:12:20.574] client/src/pages/AdminPanel.tsx(49,51): error TS2339: Property 'filter' does not exist on type 'NonNullable<TQueryFnData>'.
+[15:12:20.575] client/src/pages/AdminPanel.tsx(49,58): error TS7006: Parameter 's' implicitly has an 'any' type.
+[15:12:20.575] client/src/pages/AdminPanel.tsx(56,40): error TS7006: Parameter 'suggestion' implicitly has an 'any' type.
+[15:12:20.575] client/src/pages/AdminPanel.tsx(78,5): error TS2769: No overload matches this call.
+[15:12:20.576]   Overload 1 of 3, '(options: DefinedInitialDataOptions<User[], Error, User[], QueryKey>, queryClient?: QueryClient | undefined): DefinedUseQueryResult<User[], Error>', gave the following error.
+[15:12:20.581]     Object literal may only specify known properties, and 'onError' does not exist in type 'DefinedInitialDataOptions<User[], Error, User[], QueryKey>'.
+[15:12:20.581]   Overload 2 of 3, '(options: UndefinedInitialDataOptions<User[], Error, User[], QueryKey>, queryClient?: QueryClient | undefined): UseQueryResult<User[], Error>', gave the following error.
+[15:12:20.581]     Object literal may only specify known properties, and 'onError' does not exist in type 'UndefinedInitialDataOptions<User[], Error, User[], QueryKey>'.
+[15:12:20.582]   Overload 3 of 3, '(options: UseQueryOptions<User[], Error, User[], QueryKey>, queryClient?: QueryClient | undefined): UseQueryResult<User[], Error>', gave the following error.
+[15:12:20.582]     Object literal may only specify known properties, and 'onError' does not exist in type 'UseQueryOptions<User[], Error, User[], QueryKey>'.
+[15:12:20.582] client/src/pages/AdminPanel.tsx(127,28): error TS2339: Property 'find' does not exist on type 'NonNullable<TQueryFnData>'.
+[15:12:20.582] client/src/pages/AdminPanel.tsx(127,33): error TS7006: Parameter 'u' implicitly has an 'any' type.
+[15:12:20.582] client/src/pages/AdminPanel.tsx(143,10): error TS2339: Property 'filter' does not exist on type 'NonNullable<TQueryFnData>'.
+[15:12:20.583] client/src/pages/AdminPanel.tsx(143,17): error TS7006: Parameter 's' implicitly has an 'any' type.
+[15:12:20.583] client/src/pages/AdminPanel.tsx(144,17): error TS7006: Parameter 's' implicitly has an 'any' type.
+[15:12:20.583] client/src/pages/AdminPanel.tsx(155,23): error TS2339: Property 'filter' does not exist on type 'NonNullable<TQueryFnData>'.
+[15:12:20.584] client/src/pages/AdminPanel.tsx(155,30): error TS7006: Parameter 's' implicitly has an 'any' type.
+[15:12:20.584] 
+[15:12:21.636] client/src/pages/CreateSuggestion.tsx(6,43): error TS2305: Module '"@shared/schema"' has no exported member 'SUGGESTION_CATEGORIES'.
+[15:12:21.637] client/src/pages/CreateSuggestion.tsx(6,66): error TS2724: '"@shared/schema"' has no exported member named 'User'. Did you mean 'users'?
+[15:12:21.637] client/src/pages/CreateSuggestion.tsx(6,72): error TS2305: Module '"@shared/schema"' has no exported member 'extendedInsertSuggestionSchema'.
+[15:12:21.637] 
+[15:12:21.791] client/src/pages/Dashboard.tsx(7,10): error TS2724: '"@shared/schema"' has no exported member named 'Suggestion'. Did you mean 'suggestions'?
+[15:12:21.791] client/src/pages/Dashboard.tsx(7,22): error TS2305: Module '"@shared/schema"' has no exported member 'SUGGESTION_STATUSES'.
+[15:12:21.792] client/src/pages/Dashboard.tsx(7,43): error TS2724: '"@shared/schema"' has no exported member named 'User'. Did you mean 'users'?
+[15:12:21.792] 
+[15:12:21.931] client/src/pages/SuggestionsList.tsx(4,10): error TS2724: '"@shared/schema"' has no exported member named 'Suggestion'. Did you mean 'suggestions'?
+[15:12:21.932] client/src/pages/SuggestionsList.tsx(4,22): error TS2305: Module '"@shared/schema"' has no exported member 'SUGGESTION_STATUSES'.
+[15:12:21.932] client/src/pages/SuggestionsList.tsx(4,43): error TS2724: '"@shared/schema"' has no exported member named 'User'. Did you mean 'users'?
+[15:12:21.932] client/src/pages/SuggestionsList.tsx(33,5): error TS2769: No overload matches this call.
+[15:12:21.933]   Overload 1 of 3, '(options: DefinedInitialDataOptions<Suggestion[], Error, Suggestion[], QueryKey>, queryClient?: QueryClient | undefined): DefinedUseQueryResult<Suggestion[], Error>', gave the following error.
+[15:12:21.933]     Object literal may only specify known properties, and 'onError' does not exist in type 'DefinedInitialDataOptions<Suggestion[], Error, Suggestion[], QueryKey>'.
+[15:12:21.933]   Overload 2 of 3, '(options: UndefinedInitialDataOptions<Suggestion[], Error, Suggestion[], QueryKey>, queryClient?: QueryClient | undefined): UseQueryResult<Suggestion[], Error>', gave the following error.
+[15:12:21.933]     Object literal may only specify known properties, and 'onError' does not exist in type 'UndefinedInitialDataOptions<Suggestion[], Error, Suggestion[], QueryKey>'.
+[15:12:21.934]   Overload 3 of 3, '(options: UseQueryOptions<Suggestion[], Error, Suggestion[], QueryKey>, queryClient?: QueryClient | undefined): UseQueryResult<Suggestion[], Error>', gave the following error.
+[15:12:21.934]     Object literal may only specify known properties, and 'onError' does not exist in type 'UseQueryOptions<Suggestion[], Error, Suggestion[], QueryKey>'.
+[15:12:21.934] client/src/pages/SuggestionsList.tsx(122,23): error TS2339: Property 'filter' does not exist on type 'NonNullable<TQueryFnData>'.
+[15:12:21.934] client/src/pages/SuggestionsList.tsx(122,31): error TS7006: Parameter 'suggestion' implicitly has an 'any' type.
+[15:12:21.935] client/src/pages/SuggestionsList.tsx(208,43): error TS7006: Parameter 'suggestion' implicitly has an 'any' type.
+[15:12:21.935] 
+[15:12:21.962] client/src/pages/SuggestionTypeSelection.tsx(1,10): error TS2724: '"@shared/schema"' has no exported member named 'User'. Did you mean 'users'?
+[15:12:21.962] 
+[15:12:22.160] client/src/pages/UserAdmin.tsx(5,27): error TS2724: '"@shared/schema"' has no exported member named 'User'. Did you mean 'users'?
+[15:12:22.161] 
+[15:12:27.159] Using TypeScript 5.6.3 (local user-provided)
+[15:12:45.423] Using TypeScript 5.6.3 (local user-provided)
+[15:12:45.541] Using TypeScript 5.6.3 (local user-provided)
+[15:13:03.684] Using TypeScript 5.6.3 (local user-provided)
+[15:13:21.019] Using TypeScript 5.6.3 (local user-provided)
+[15:13:38.850] Using TypeScript 5.6.3 (local user-provided)
+[15:13:56.733] Using TypeScript 5.6.3 (local user-provided)
+[15:14:14.495] Using TypeScript 5.6.3 (local user-provided)
+[15:14:33.079] Using TypeScript 5.6.3 (local user-provided)
+[15:14:50.592] Using TypeScript 5.6.3 (local user-provided)
+[15:14:51.126] Build Completed in /vercel/output [3m]
+[15:14:52.595] Deploying outputs...
+[15:15:22.838] 
+[15:15:23.152] Deployment completed
