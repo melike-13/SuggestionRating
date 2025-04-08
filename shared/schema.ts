@@ -1,17 +1,19 @@
+// schema.ts
 import { pgTable, text, serial, integer, boolean, timestamp, varchar, json, decimal } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
-// Users table for authentication and tracking who submitted suggestions
+// USERS TABLE
 export const users = pgTable("users", {
   id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(), // Sicil numarası için kullanacağız
+  username: text("username").notNull().unique(),
   password: text("password").notNull(),
   displayName: text("display_name").notNull(),
-  role: text("role").notNull().default("employee"), // "employee", "manager", "executive" değerleri alabilir
-  department: text("department"), // kullanıcının bölümü (opsiyonel)
+  fullName: text("full_name"), // <-- Yeni eklendi
+  role: text("role").notNull().default("employee"),
+  department: text("department"),
   isAdmin: boolean("is_admin").notNull().default(false),
-  email: text("email"), // E-posta bildirimleri için
+  email: text("email"),
 });
 
 export const insertUserSchema = createInsertSchema(users).pick({
@@ -24,35 +26,32 @@ export const insertUserSchema = createInsertSchema(users).pick({
   email: true,
 });
 
-// Kullanıcı rolleri
 export const USER_ROLES = {
   EMPLOYEE: "employee",
   MANAGER: "manager",
   EXECUTIVE: "executive",
-  ADMIN: "executive" // Yönetici (Genel Müdür) rolü için
+  ADMIN: "executive",
 };
 
-// Kaizen türleri
 export const KAIZEN_TYPES = {
-  BEFORE_AFTER: "before_after", // Önce-Sonra Kaizen
-  KOBETSU: "kobetsu", // Kobetsu Kaizen
+  BEFORE_AFTER: "before_after",
+  KOBETSU: "kobetsu",
 } as const;
 
-// İyileştirme türleri
 export const IMPROVEMENT_TYPES = {
-  ISG: "isg", // İş Sağlığı ve Güvenliği
-  ENVIRONMENT: "environment", // Çevre
-  QUALITY: "quality", // Kalite
-  PRODUCTION: "production", // Üretim
-  COST: "cost", // Maliyet
-  COMPETENCE: "competence", // Yetkinlik
-  SUSTAINABILITY: "sustainability", // Sürdürülebilirlik
-  FIVE_S: "5s", // 5S
-  EFFICIENCY: "efficiency", // Verimlilik
-  OTHER: "other", // Diğer
+  ISG: "isg",
+  ENVIRONMENT: "environment",
+  QUALITY: "quality",
+  PRODUCTION: "production",
+  COST: "cost",
+  COMPETENCE: "competence",
+  SUSTAINABILITY: "sustainability",
+  FIVE_S: "5s",
+  EFFICIENCY: "efficiency",
+  OTHER: "other",
 } as const;
 
-// Kaizen suggestions table
+// SUGGESTIONS TABLE
 export const suggestions = pgTable("suggestions", {
   id: serial("id").primaryKey(),
   title: text("title").notNull(),
@@ -60,343 +59,79 @@ export const suggestions = pgTable("suggestions", {
   category: text("category").notNull(),
   benefits: text("benefits").notNull(),
   status: text("status").notNull().default("new"),
-  
-  // Öneri tipi "kaizen" veya "kivilcim" değerlerini alır
   suggestionType: text("suggestion_type").notNull().default("kaizen"),
-  
-  // Kaizen türü ve iyileştirme türü
   kaizenType: text("kaizen_type").default(KAIZEN_TYPES.BEFORE_AFTER),
   improvementType: text("improvement_type").notNull().default(IMPROVEMENT_TYPES.QUALITY),
-  
-  // Uygulanacak departman
   targetDepartment: text("target_department"),
-  
-  // Ekip üyeleri ve proje lideri - JSON olarak saklanacak
   teamMembers: json("team_members").$type<{id: number, name: string}[]>().default([]),
   projectLeader: integer("project_leader"),
-  
-  // Dosya yükleme alanları için URL'ler - JSON olarak saklanacak
   currentStateFiles: json("current_state_files").$type<string[]>().default([]),
   improvementFiles: json("improvement_files").$type<string[]>().default([]),
-  
-  // Şirkete katkısı
   companyContribution: text("company_contribution"),
-  
-  // Başvuru bilgileri
   submittedBy: integer("submitted_by").notNull(),
+  createdById: integer("created_by_id"), // <-- Yeni eklendi
   submittedAt: timestamp("submitted_at").notNull().defaultNow(),
-  
-  // Bölüm müdürü incelemesi
   departmentManagerId: integer("department_manager_id"),
   departmentReviewAt: timestamp("department_review_at"),
   departmentFeedback: text("department_feedback"),
-  
-  // Yapılabilirlik değerlendirmesi
-  feasibilityScore: integer("feasibility_score"), // 2.5 üstünde olmalı
+  feasibilityScore: integer("feasibility_score"),
   feasibilityFeedback: text("feasibility_feedback"),
   feasibilityReviewedBy: integer("feasibility_reviewed_by"),
   feasibilityReviewedAt: timestamp("feasibility_reviewed_at"),
-  
-  // Yapılabilirlik Kriterleri (1-5 arası puan)
-  innovationScore: integer("innovation_score"), // Yenilik/Yaratıcılık (%15)
-  safetyScore: integer("safety_score"), // İSG Etkisi (%15)
-  environmentScore: integer("environment_score"), // Çevre Etkisi (%15)
-  employeeSatisfactionScore: integer("employee_satisfaction_score"), // Çalışan Memnuniyeti (%15)
-  technologicalCompatibilityScore: integer("technological_compatibility_score"), // Teknolojik Uyum (%10)
-  implementationEaseScore: integer("implementation_ease_score"), // Uygulanabilme Kolaylığı (%10)
-  costBenefitScore: integer("cost_benefit_score"), // Maliyet (%20)
-  
-  // Çözüm önerisi
+  innovationScore: integer("innovation_score"),
+  safetyScore: integer("safety_score"),
+  environmentScore: integer("environment_score"),
+  employeeSatisfactionScore: integer("employee_satisfaction_score"),
+  technologicalCompatibilityScore: integer("technological_compatibility_score"),
+  implementationEaseScore: integer("implementation_ease_score"),
+  costBenefitScore: integer("cost_benefit_score"),
   solutionDescription: text("solution_description"),
   solutionProposedBy: integer("solution_proposed_by"),
   solutionProposedAt: timestamp("solution_proposed_at"),
-  
-  // Maliyet değerlendirmesi
-  costScore: integer("cost_score"), // 3 üstünde olmalı
+  costScore: integer("cost_score"),
   costDetails: text("cost_details"),
   costReviewedBy: integer("cost_reviewed_by"),
   costReviewedAt: timestamp("cost_reviewed_at"),
-  
-  // Kıvılcım için özel alanlar
-  kivilcimLeaderId: integer("kivilcim_leader_id"), // Kıvılcım Lideri (Ön eleme yapan kişi)
-  kivilcimReviewAt: timestamp("kivilcim_review_at"), // Ön eleme tarihi
-  kivilcimFeedback: text("kivilcim_feedback"), // Ön eleme geri bildirimi
-  kivilcimCommitteeReviewAt: timestamp("kivilcim_committee_review_at"), // Kurul değerlendirme tarihi
-  kivilcimCommitteeFeedback: text("kivilcim_committee_feedback"), // Kurul değerlendirme geri bildirimi
-  kivilcimDirectorReviewAt: timestamp("kivilcim_director_review_at"), // Direktör görüşü alma tarihi
-  kivilcimDirectorFeedback: text("kivilcim_director_feedback"), // Direktör geri bildirimi
-  isReserved: boolean("is_reserved").default(false), // Rezerve edilmiş öneri mi?
-  reservationNotes: text("reservation_notes"), // Rezerve edilme nedeni
-  
-  // Maliyet hesaplama detayları (Kıvılcım için)
+  kivilcimLeaderId: integer("kivilcim_leader_id"),
+  kivilcimReviewAt: timestamp("kivilcim_review_at"),
+  kivilcimFeedback: text("kivilcim_feedback"),
+  kivilcimCommitteeReviewAt: timestamp("kivilcim_committee_review_at"),
+  kivilcimCommitteeFeedback: text("kivilcim_committee_feedback"),
+  kivilcimDirectorReviewAt: timestamp("kivilcim_director_review_at"),
+  kivilcimDirectorFeedback: text("kivilcim_director_feedback"),
+  isReserved: boolean("is_reserved").default(false),
+  reservationNotes: text("reservation_notes"),
   costCalculationDetails: json("cost_calculation_details").$type<{
     materials: { description: string, amount: number, unitPrice: number, totalPrice: number }[],
     labor: { description: string, amount: number, unitPrice: number, totalPrice: number }[],
     other: { description: string, amount: number, unitPrice: number, totalPrice: number }[]
   }>(),
-  
-  // Genel Müdür onayı
   executiveReviewedBy: integer("executive_reviewed_by"),
   executiveReviewedAt: timestamp("executive_reviewed_at"),
   executiveFeedback: text("executive_feedback"),
-  
-  // Uygulama ve takip
   implementationStartedAt: timestamp("implementation_started_at"),
   implementationCompletedAt: timestamp("implementation_completed_at"),
   implementationNotes: text("implementation_notes"),
-  
-  // Raporlama
   reportedAt: timestamp("reported_at"),
   reportDetails: text("report_details"),
   reportedBy: integer("reported_by"),
-  
-  // Değerlendirme
   evaluationScore: integer("evaluation_score"),
   evaluationNotes: text("evaluation_notes"),
   evaluatedBy: integer("evaluated_by"),
   evaluatedAt: timestamp("evaluated_at"),
-  
-  // Eski alanlar (geriye uyumluluk için)
   rating: integer("rating"),
   feedback: text("feedback"),
   reviewedBy: integer("reviewed_by"),
   reviewedAt: timestamp("reviewed_at"),
 });
 
-// Yapılabilirlik hesaplama ağırlıkları (yüzde olarak)
-export const FEASIBILITY_WEIGHTS = {
-  INNOVATION: 15, // Yenilik/Yaratıcılık
-  SAFETY: 15, // İSG Etkisi
-  ENVIRONMENT: 15, // Çevre Etkisi
-  EMPLOYEE_SATISFACTION: 15, // Çalışan Memnuniyeti
-  TECHNOLOGICAL_COMPATIBILITY: 10, // Teknolojik Uyum
-  IMPLEMENTATION_EASE: 10, // Uygulanabilme Kolaylığı
-  COST_BENEFIT: 20, // Maliyet
-} as const;
-
-// Yapılabilirlik değerlendirme sonuçları için eşik değerler
-export const FEASIBILITY_THRESHOLDS = {
-  MINIMUM_OVERALL_SCORE: 2.5, // Genel değerlendirme puanı en az 2.5 olmalı
-  NEEDS_EXECUTIVE_APPROVAL_COST_SCORE: 2 // Maliyet puanı 1 veya 2 ise genel müdür onayı gerekir
-} as const;
-
-export const insertSuggestionSchema = createInsertSchema(suggestions).omit({
-  id: true,
-  status: true,
-  submittedAt: true,
-  suggestionType: true, // API'de ayrıca gönderilecek
-  
-  // Bölüm müdürü incelemesi
-  departmentManagerId: true,
-  departmentReviewAt: true,
-  departmentFeedback: true,
-  
-  // Yapılabilirlik değerlendirmesi
-  feasibilityScore: true,
-  feasibilityFeedback: true,
-  feasibilityReviewedBy: true,
-  feasibilityReviewedAt: true,
-  
-  // Yapılabilirlik Kriterleri
-  innovationScore: true,
-  safetyScore: true,
-  environmentScore: true,
-  employeeSatisfactionScore: true,
-  technologicalCompatibilityScore: true,
-  implementationEaseScore: true,
-  costBenefitScore: true,
-  
-  // Çözüm önerisi
-  solutionDescription: true,
-  solutionProposedBy: true,
-  solutionProposedAt: true,
-  
-  // Maliyet değerlendirmesi
-  costScore: true,
-  costDetails: true,
-  costReviewedBy: true,
-  costReviewedAt: true,
-  
-  // Kıvılcım için özel alanlar
-  kivilcimLeaderId: true,
-  kivilcimReviewAt: true,
-  kivilcimFeedback: true,
-  kivilcimCommitteeReviewAt: true,
-  kivilcimCommitteeFeedback: true,
-  kivilcimDirectorReviewAt: true,
-  kivilcimDirectorFeedback: true,
-  isReserved: true,
-  reservationNotes: true,
-  costCalculationDetails: true,
-  
-  // Genel Müdür onayı
-  executiveReviewedBy: true,
-  executiveReviewedAt: true,
-  executiveFeedback: true,
-  
-  // Uygulama ve takip
-  implementationStartedAt: true,
-  implementationCompletedAt: true,
-  implementationNotes: true,
-  
-  // Raporlama
-  reportedAt: true,
-  reportDetails: true,
-  reportedBy: true,
-  
-  // Değerlendirme
-  evaluationScore: true,
-  evaluationNotes: true,
-  evaluatedBy: true,
-  evaluatedAt: true,
-  
-  // Eski alanlar
-  rating: true,
-  feedback: true,
-  reviewedBy: true,
-  reviewedAt: true,
-});
-
-// Rewards table
+// REWARDS TABLE
 export const rewards = pgTable("rewards", {
   id: serial("id").primaryKey(),
   suggestionId: integer("suggestion_id").notNull(),
+  userId: integer("user_id"), // <-- Yeni eklendi
   amount: integer("amount").notNull(),
-  type: text("type").notNull(), // "money", "points", "gift"
+  type: text("type").notNull(),
   assignedBy: integer("assigned_by").notNull(),
   assignedAt: timestamp("assigned_at").notNull().defaultNow(),
-});
-
-export const insertRewardSchema = createInsertSchema(rewards).omit({
-  id: true,
-  assignedAt: true,
-});
-
-// Types
-export type User = typeof users.$inferSelect;
-export type InsertUser = z.infer<typeof insertUserSchema>;
-
-export type Suggestion = typeof suggestions.$inferSelect;
-export type InsertSuggestion = z.infer<typeof insertSuggestionSchema>;
-
-export type Reward = typeof rewards.$inferSelect;
-export type InsertReward = z.infer<typeof insertRewardSchema>;
-
-// Status and Category Constants
-export const SUGGESTION_STATUSES = {
-  NEW: "new", // İlk giriş (Kaizen veya Kıvılcım Formu)
-  DEPARTMENT_REVIEW: "department_review", // Bölüm Müdürü incelemesinde
-  FEASIBILITY_ASSESSMENT: "feasibility_assessment", // Yapılabilirlik değerlendirmesinde
-  FEASIBILITY_REJECTED: "feasibility_rejected", // Yapılabilirlik puanı düşük (< 2.5)
-  SOLUTION_IDENTIFIED: "solution_identified", // Çözüm önerisi belirlenmiş
-  COST_ASSESSMENT: "cost_assessment", // Maliyet değerlendirmesinde
-  COST_REJECTED: "cost_rejected", // Maliyet puanı düşük (< 3)
-  EXECUTIVE_REVIEW: "executive_review", // Genel Müdür incelemesinde
-  APPROVED: "approved", // Onaylanmış
-  REJECTED: "rejected", // Reddedilmiş
-  IN_PROGRESS: "in_progress", // Uygulama aşamasında
-  COMPLETED: "completed", // Uygulama tamamlandı
-  REPORTED: "reported", // Raporlandı
-  EVALUATED: "evaluated", // Değerlendirildi
-  REWARDED: "rewarded", // Ödüllendirildi
-  
-  // Kıvılcım için özel durumlar
-  KIVILCIM_INITIAL_REVIEW: "kivilcim_initial_review", // Kıvılcım Lideri tarafından ön eleme
-  KIVILCIM_COMMITTEE_REVIEW: "kivilcim_committee_review", // Kurul değerlendirmesi
-  KIVILCIM_DIRECTOR_REVIEW: "kivilcim_director_review", // Direktör/Müdür görüşü alma
-  KIVILCIM_RESERVE: "kivilcim_reserve" // Rezerve edilmiş öneri
-} as const;
-
-export const SUGGESTION_CATEGORIES = {
-  PRODUCTION: "production",
-  QUALITY: "quality",
-  SAFETY: "safety", 
-  ENVIRONMENT: "environment",
-  COST: "cost",
-  WORKPLACE: "workplace",
-  OTHER: "other",
-} as const;
-
-export const REWARD_TYPES = {
-  MONEY: "money",
-  POINTS: "points",
-  GIFT: "gift",
-} as const;
-
-// Extend with validation
-export const extendedInsertSuggestionSchema = insertSuggestionSchema.extend({
-  title: z.string().min(5, "Başlık en az 5 karakter olmalıdır").max(100, "Başlık en fazla 100 karakter olmalıdır"),
-  description: z.string().min(10, "Açıklama en az 10 karakter olmalıdır"),
-  benefits: z.string().min(10, "Beklenen faydalar en az 10 karakter olmalıdır"),
-  
-  // Kategori
-  category: z.enum([
-    SUGGESTION_CATEGORIES.PRODUCTION,
-    SUGGESTION_CATEGORIES.QUALITY,
-    SUGGESTION_CATEGORIES.SAFETY,
-    SUGGESTION_CATEGORIES.ENVIRONMENT,
-    SUGGESTION_CATEGORIES.COST,
-    SUGGESTION_CATEGORIES.WORKPLACE,
-    SUGGESTION_CATEGORIES.OTHER
-  ]),
-  
-  // Kaizen türü - Kaizen için zorunlu, Kıvılcım için opsiyonel
-  kaizenType: z.enum([
-    KAIZEN_TYPES.BEFORE_AFTER,
-    KAIZEN_TYPES.KOBETSU
-  ]).optional(),
-  
-  // İyileştirme türü
-  improvementType: z.enum([
-    IMPROVEMENT_TYPES.ISG,
-    IMPROVEMENT_TYPES.ENVIRONMENT,
-    IMPROVEMENT_TYPES.QUALITY,
-    IMPROVEMENT_TYPES.PRODUCTION,
-    IMPROVEMENT_TYPES.COST,
-    IMPROVEMENT_TYPES.COMPETENCE,
-    IMPROVEMENT_TYPES.SUSTAINABILITY,
-    IMPROVEMENT_TYPES.FIVE_S,
-    IMPROVEMENT_TYPES.EFFICIENCY,
-    IMPROVEMENT_TYPES.OTHER
-  ]),
-  
-  // Kobetsu Kaizen için proje lideri zorunlu
-  projectLeader: z.number().optional().refine(
-    (val) => {
-      // Eğer veri yoksa validation'dan geçsin
-      if (val === undefined || val === null) return true;
-      // Sayı olarak geçerli bir ID ise geçsin
-      return Number.isInteger(val) && val > 0;
-    }, 
-    {
-      message: "Proje lideri geçerli bir kullanıcı ID'si olmalıdır"
-    }
-  ),
-  
-  // Dosya yükleme alanları opsiyonel
-  currentStateFiles: z.array(z.string()).optional(),
-  improvementFiles: z.array(z.string()).optional(),
-  
-  // Ekip üyeleri maksimum 4 kişi olabilir
-  teamMembers: z.array(
-    z.object({
-      id: z.number(),
-      name: z.string()
-    })
-  ).max(4, "Ekip en fazla 4 kişiden oluşabilir").optional(),
-  
-  // Şirkete katkısı
-  companyContribution: z.string().min(10, "Şirkete katkı açıklaması en az 10 karakter olmalıdır").optional(),
-});
-
-export const extendedInsertRewardSchema = insertRewardSchema.extend({
-  amount: z.number().positive("Ödül miktarı pozitif olmalıdır"),
-  type: z.enum([REWARD_TYPES.MONEY, REWARD_TYPES.POINTS, REWARD_TYPES.GIFT]),
-});
-
-// Session tablosu - Express-session için gerekli
-export const session = pgTable("session", {
-  sid: varchar("sid").primaryKey(),
-  sess: json("sess").notNull(),
-  expire: timestamp("expire", { precision: 6 }).notNull(),
 });
